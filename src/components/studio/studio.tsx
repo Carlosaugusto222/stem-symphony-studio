@@ -978,8 +978,15 @@ export function Studio() {
         <>
           <header className="studio-header">
             <div className="brand">
-              <span className="brand-mark" />
-              PLAYALONG <span>// ENGINE v2.4</span>
+              <img
+                src="/logo.jpeg"
+                alt="PlayAlong Studio Logo"
+                className="brand-logo"
+              />
+              <div className="brand-text">
+                <span className="brand-title">PLAYALONG</span>
+                <span className="brand-subtitle">// ENGINE v2.4</span>
+              </div>
             </div>
             <span className="header-divider" />
             <span className="status-pill">
@@ -1322,8 +1329,17 @@ export function Studio() {
         <>
           <section className="transport-panel">
             <div className="transport-display">
-              <div className="time-display">
-                {timecode(position)} <span>/ {timecode(duration)}</span>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <img
+                  src="/logo.jpeg"
+                  alt="PlayAlong Studio Logo"
+                  className="w-8 h-8 rounded object-cover border border-white/10 shrink-0 cursor-pointer hover:border-white/30 transition-colors"
+                  onClick={() => setScreen("upload")}
+                  title="Voltar ao início / Trocar áudio"
+                />
+                <div className="time-display">
+                  {timecode(position)} <span>/ {timecode(duration)}</span>
+                </div>
               </div>
               <div className="song-display">
                 <h1>{session?.name.replace(/\.[^/.]+$/, "").toUpperCase()}</h1>

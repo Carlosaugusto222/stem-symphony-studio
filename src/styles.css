@@ -239,11 +239,37 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: var(--lit);
   white-space: nowrap;
 }
-.brand span:not(.brand-mark) {
+.brand-logo {
+  height: 34px;
+  width: auto;
+  max-width: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid oklch(1 0 0 / 14%);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.15;
+}
+.brand-title {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--lit);
+}
+.brand-subtitle {
+  font-size: 9px;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+}
+.brand span:not(.brand-mark):not(.brand-title):not(.brand-subtitle) {
   color: var(--muted-foreground);
 }
 .brand-mark {
