@@ -1,11 +1,28 @@
 import { z } from "zod";
 
 export const STEMS = ["VOZ", "BATERIA", "BAIXO", "GUITARRAS", "TECLADOS"] as const;
+
+export interface TrackInfo {
+  id: string;
+  name: string;
+  stemKey: string;
+  detectedInstrument: string;
+  confidence: number;
+  confidencePercent: string;
+  tag: string;
+  color: string;
+  accentClass: string;
+  badgeClass: string;
+  icon: "guitar" | "piano" | "bass" | "drums" | "synth" | "mic" | "horn" | "percussion";
+  isVocalPart?: boolean;
+  vocalRole?: "lead" | "harmony" | "backing";
+}
+
 export type Channel = { db: number; pan: number; mute: boolean; solo: boolean };
-export const initialChannels = (): Channel[] =>
-  [-0.8, 0, 0, -1.5, -3.5].map((db, i) => ({
-    db,
-    pan: [-0.12, 0, 0, 0.18, -0.25][i] ?? 0,
+export const initialChannels = (n = 5): Channel[] =>
+  Array.from({ length: n }, (_, i) => ({
+    db: [-0.8, 0, 0, -1.5, -3.5, -2.0, -3.0][i] ?? 0,
+    pan: [-0.12, 0, 0, 0.18, -0.25, 0.3, -0.3][i] ?? 0,
     mute: false,
     solo: false,
   }));
@@ -38,6 +55,12 @@ export type Session = {
   size: string;
   file?: File;
   blob?: Blob;
+  bpm?: number;
+  bpmDisplay?: string;
+  timeSignature?: "4/4" | "3/4" | "6/8";
+  firstDownbeat?: number;
+  beats?: Array<{ time: number; bar: number; beat: number; isDownbeat: boolean }>;
+  tracks?: TrackInfo[];
 };
 
 export class StudioEngine {
@@ -51,7 +74,13 @@ export class StudioEngine {
   rate = 1;
   playing = false;
   buffers: AudioBuffer[] = [];
+  bpm = 125.0;
+  timeSignature: "4/4" | "3/4" | "6/8" = "4/4";
+  firstDownbeat = 0;
   clickTimer?: ReturnType<typeof setInterval>;
+  clickEnabled = false;
+  nextClickBeat = 0;
+
   constructor() {
     this.context = new AudioContext({ sampleRate: 48000 });
   }
@@ -97,6 +126,9 @@ export class StudioEngine {
     });
     this.playing = true;
     this.update(channels);
+    if (this.clickEnabled) {
+      this.startClickScheduler();
+    }
   }
   update(channels: Channel[]) {
     channels.forEach((c, i) => {
@@ -104,20 +136,47 @@ export class StudioEngine {
       this.pans[i]?.pan.setTargetAtTime(c.pan, this.context.currentTime, 0.015);
     });
   }
-  click(enabled: boolean) {
+  setTempo(bpm: number, timeSignature: "4/4" | "3/4" | "6/8" = "4/4", downbeat = 0) {
+    this.bpm = bpm;
+    this.timeSignature = timeSignature;
+    this.firstDownbeat = downbeat;
+  }
+  click(enabled: boolean, bpm = this.bpm, timeSignature = this.timeSignature) {
+    this.clickEnabled = enabled;
+    this.bpm = bpm;
+    this.timeSignature = timeSignature;
     clearInterval(this.clickTimer);
-    if (enabled)
-      this.clickTimer = setInterval(() => {
-        if (!this.playing) return;
-        const osc = this.context.createOscillator(),
-          g = this.context.createGain();
-        osc.frequency.value = 1200;
-        g.gain.setValueAtTime(0.08, this.context.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.045);
+    if (enabled && this.playing) {
+      this.startClickScheduler();
+    }
+  }
+  private startClickScheduler() {
+    clearInterval(this.clickTimer);
+    const beatSec = 60 / (this.bpm || 120);
+    const beatsPerBar = this.timeSignature === "3/4" ? 3 : this.timeSignature === "6/8" ? 6 : 4;
+
+    this.clickTimer = setInterval(() => {
+      if (!this.playing) return;
+      const pos = this.position();
+      const relativeTime = Math.max(0, pos - this.firstDownbeat);
+      const currentBeatIndex = Math.floor(relativeTime / beatSec);
+
+      if (currentBeatIndex !== this.nextClickBeat) {
+        this.nextClickBeat = currentBeatIndex;
+        const isDownbeat = currentBeatIndex % beatsPerBar === 0;
+
+        const osc = this.context.createOscillator();
+        const g = this.context.createGain();
+        // Downbeat has 1600 Hz higher pitch, upbeat has 1000 Hz
+        osc.frequency.value = isDownbeat ? 1600 : 1000;
+        const gainLevel = isDownbeat ? 0.12 : 0.07;
+        g.gain.setValueAtTime(gainLevel, this.context.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.038);
         osc.connect(g).connect(this.context.destination);
         osc.start();
-        osc.stop(this.context.currentTime + 0.05);
-      }, 60000 / 125);
+        osc.stop(this.context.currentTime + 0.04);
+      }
+    }, 25);
   }
   dispose() {
     this.stop();
@@ -176,6 +235,79 @@ export function createDemo(ctx: AudioContext): Session {
     buffers,
     kind: "demo",
     size: "5 STEMS · 24s",
+    bpm: 125.0,
+    bpmDisplay: "125.0 BPM",
+    timeSignature: "4/4",
+    firstDownbeat: 0,
+    tracks: [
+      {
+        id: "demo-vocal-lead",
+        name: "Voz 1 — Lead Vocal",
+        stemKey: "VOZ",
+        detectedInstrument: "Lead Vocal Principal",
+        confidence: 0.96,
+        confidencePercent: "96% certeza",
+        tag: "Lead Vocal · 96% certeza",
+        color: "#ec4899",
+        accentClass: "border-pink-500/50 text-pink-400",
+        badgeClass: "bg-pink-500/10 text-pink-400 border-pink-500/30",
+        icon: "mic",
+        isVocalPart: true,
+        vocalRole: "lead",
+      },
+      {
+        id: "demo-drums",
+        name: "Bateria Acústica",
+        stemKey: "BATERIA",
+        detectedInstrument: "Bateria Acústica",
+        confidence: 0.95,
+        confidencePercent: "95% certeza",
+        tag: "Bateria Acústica · 95% certeza",
+        color: "#ef4444",
+        accentClass: "border-red-500/50 text-red-400",
+        badgeClass: "bg-red-500/10 text-red-400 border-red-500/30",
+        icon: "drums",
+      },
+      {
+        id: "demo-bass",
+        name: "Baixo Slap / Elétrico",
+        stemKey: "BAIXO",
+        detectedInstrument: "Baixo Slap / Elétrico",
+        confidence: 0.94,
+        confidencePercent: "94% certeza",
+        tag: "Baixo Slap · 94% certeza",
+        color: "#10b981",
+        accentClass: "border-emerald-500/50 text-emerald-400",
+        badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+        icon: "bass",
+      },
+      {
+        id: "demo-guitar",
+        name: "Violão de Aço",
+        stemKey: "GUITARRAS",
+        detectedInstrument: "Violão de Aço",
+        confidence: 0.93,
+        confidencePercent: "93% certeza",
+        tag: "Violão de Aço · 93% certeza",
+        color: "#f59e0b",
+        accentClass: "border-amber-500/50 text-amber-400",
+        badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+        icon: "guitar",
+      },
+      {
+        id: "demo-keys",
+        name: "Piano Elétrico (Rhodes)",
+        stemKey: "TECLADOS",
+        detectedInstrument: "Piano Elétrico (Rhodes)",
+        confidence: 0.93,
+        confidencePercent: "93% certeza",
+        tag: "Piano Elétrico (Rhodes) · 93% certeza",
+        color: "#38bdf8",
+        accentClass: "border-sky-500/50 text-sky-400",
+        badgeClass: "bg-sky-500/10 text-sky-400 border-sky-500/30",
+        icon: "piano",
+      },
+    ],
   };
 }
 

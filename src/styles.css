@@ -1564,6 +1564,186 @@ progress::-moz-progress-bar {
     font-size: 8px;
   }
 }
+
+/* === ADVANCED AI TELEMETRY & TIMELINE === */
+.telemetry-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-top: 14px;
+}
+.telemetry-timeline-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.telemetry-step-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  background: oklch(0 0 0 / 20%);
+  border-left: 2px solid var(--border);
+  transition: all 0.2s ease;
+}
+.telemetry-step-row.is-completed {
+  border-left-color: oklch(0.72 0.16 150);
+  color: var(--foreground);
+}
+.telemetry-step-row.is-active {
+  border-left-color: var(--lit);
+  background: oklch(1 0 0 / 5%);
+  color: var(--lit);
+}
+.telemetry-step-row.is-pending {
+  opacity: 0.5;
+  color: var(--muted-foreground);
+}
+.telemetry-step-label {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.telemetry-step-detail {
+  margin-left: auto;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--muted-foreground);
+}
+.telemetry-step-row.is-completed .telemetry-step-detail {
+  color: oklch(0.72 0.16 150);
+}
+
+/* === DIGITAL BPM DISPLAY & TAP TEMPO === */
+.bpm-controller {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+.bpm-display-digital {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lit);
+  background: oklch(0 0 0 / 30%);
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--glass-border);
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bpm-display-digital .bpm-unit {
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+.bpm-adjust-keys {
+  display: flex;
+  gap: 2px;
+}
+.bpm-adjust-keys .studio-key {
+  height: 26px;
+  padding: 0 6px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+}
+.tap-tempo-key {
+  height: 26px !important;
+  font-size: 9px !important;
+  padding: 0 10px !important;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.tap-tempo-key.tap-pulse {
+  background: var(--lit) !important;
+  color: var(--background) !important;
+  transform: scale(0.97);
+}
+.beat-grid-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.08s ease;
+}
+.beat-grid-led.is-beat {
+  background: oklch(0.85 0.15 85);
+  box-shadow: 0 0 8px oklch(0.85 0.15 85);
+}
+.beat-grid-led.is-downbeat {
+  background: var(--lit);
+  box-shadow: 0 0 10px var(--lit);
+}
+
+/* === DYNAMIC MULTI-TRACK MIXER CHANNELS === */
+.channel-grid.dynamic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.channel-header-instrument {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.channel-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+.channel-instrument-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lit);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.instrument-confidence-pill {
+  font-size: 8px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  width: fit-content;
+}
+.vocal-polyphonic-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: oklch(0.35 0.05 310 / 25%);
+  border: 1px solid oklch(0.6 0.15 320 / 30%);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 11px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .spin {
     animation: none;
