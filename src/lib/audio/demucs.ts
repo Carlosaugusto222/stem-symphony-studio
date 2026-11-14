@@ -1,5 +1,9 @@
-import { Client } from "@gradio/client";
 import { STEMS, wavBlob } from "./engine";
+
+async function getGradioClient() {
+  const { Client } = await import("@gradio/client");
+  return Client;
+}
 
 export type DemucsHealth = "connecting" | "online" | "local";
 
@@ -111,6 +115,7 @@ export async function checkDemucsHealth(customToken?: string): Promise<DemucsHea
       ? { token: token as `hf_${string}`, hf_token: token as `hf_${string}` }
       : {};
 
+    const Client = await getGradioClient();
     const connectPromise = Client.connect(space, clientOptions);
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("Timeout conectando ao Demucs")), 12000),
@@ -292,6 +297,7 @@ export async function separateAudioDemucs(
       const clientOptions = token
         ? { token: token as `hf_${string}`, hf_token: token as `hf_${string}` }
         : {};
+      const Client = await getGradioClient();
       const app = await Client.connect(currentSpace, {
         ...clientOptions,
         events: ["status", "data"],

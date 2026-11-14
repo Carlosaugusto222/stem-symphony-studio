@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Mic, Music, Radio, Activity } from "lucide-react";
@@ -30,16 +31,18 @@ export function Waveform({
   showGrid?: boolean;
   gridCount?: number;
 }) {
-  const data = buffer?.getChannelData(0);
-  const heights = Array.from({ length: 42 }, (_, i) => {
-    if (!data) return 15 + Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.3)) * 70;
-    const start = Math.floor((i * data.length) / 42),
-      end = Math.floor(((i + 1) * data.length) / 42);
-    let max = 0;
-    for (let j = start; j < end; j += Math.max(1, Math.floor((end - start) / 300)))
-      max = Math.max(max, Math.abs(data[j] ?? 0));
-    return Math.max(4, Math.min(92, max * 250));
-  });
+  const heights = useMemo(() => {
+    const data = buffer?.getChannelData(0);
+    return Array.from({ length: 42 }, (_, i) => {
+      if (!data) return 15 + Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.3)) * 70;
+      const start = Math.floor((i * data.length) / 42),
+        end = Math.floor(((i + 1) * data.length) / 42);
+      let max = 0;
+      for (let j = start; j < end; j += Math.max(1, Math.floor((end - start) / 300)))
+        max = Math.max(max, Math.abs(data[j] ?? 0));
+      return Math.max(4, Math.min(92, max * 250));
+    });
+  }, [buffer]);
 
   return (
     <div className="relative w-full">

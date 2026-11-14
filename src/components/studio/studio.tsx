@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import {
-  Activity,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -29,9 +28,14 @@ import {
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InstrumentIcon, Key, Waveform } from "./controls";
-import { InstrumentRefineModal } from "./instrument-refine-modal";
-import { HfTokenModal } from "./hf-token-modal";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+
+const InstrumentRefineModal = lazy(() =>
+  import("./instrument-refine-modal").then((m) => ({ default: m.InstrumentRefineModal })),
+);
+const HfTokenModal = lazy(() =>
+  import("./hf-token-modal").then((m) => ({ default: m.HfTokenModal })),
+);
 import {
   STEMS,
   StudioEngine,
@@ -109,6 +113,7 @@ export function Studio() {
   const cancelAiRef = useRef<(() => Promise<void>) | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const recordingStream = useRef<MediaStream | null>(null);
+  const analyserBufferRef = useRef<Uint8Array | null>(null);
   const [screen, setScreen] = useState<"upload" | "mixer">("upload");
   const [library, setLibrary] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -216,11 +221,17 @@ export function Studio() {
       setIsBeat(flashing);
       setIsDownbeat(flashing && isCurDownbeat);
 
+      const binCount = e.analysers[0]?.frequencyBinCount ?? 64;
+      if (!analyserBufferRef.current || analyserBufferRef.current.length !== binCount) {
+        analyserBufferRef.current = new Uint8Array(binCount);
+      }
+      const values = analyserBufferRef.current;
       setMeters(
         e.analysers.map((a) => {
-          const values = new Uint8Array(a.frequencyBinCount);
           a.getByteFrequencyData(values);
-          return Math.min(10, Math.round(values.reduce((s, v) => s + v, 0) / values.length / 10));
+          let sum = 0;
+          for (let v = 0; v < values.length; v++) sum += values[v];
+          return Math.min(10, Math.round(sum / values.length / 10));
         }),
       );
     }, 40);
@@ -1035,11 +1046,18 @@ export function Studio() {
         <>
           <header className="studio-header">
             <div className="brand">
-              <img
-                src="/logo.jpeg"
-                alt="PlayAlong Studio Logo"
-                className="brand-logo"
-              />
+              <picture>
+                <source srcSet="/logo.webp" type="image/webp" />
+                <img
+                  src="/logo.jpeg"
+                  alt="PlayAlong Studio Logo"
+                  width={60}
+                  height={34}
+                  fetchPriority="high"
+                  loading="eager"
+                  className="brand-logo"
+                />
+              </picture>
               <div className="brand-text">
                 <span className="brand-title">PLAYALONG</span>
                 <span className="brand-subtitle">// ENGINE v2.4</span>
@@ -1433,13 +1451,19 @@ export function Studio() {
           <section className="transport-panel">
             <div className="transport-display">
               <div className="flex items-center gap-2.5 shrink-0">
-                <img
-                  src="/logo.jpeg"
-                  alt="PlayAlong Studio Logo"
-                  className="w-8 h-8 rounded object-cover border border-white/10 shrink-0 cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:border-white/30"
-                  onClick={() => setScreen("upload")}
-                  title="Voltar ao início / Trocar áudio"
-                />
+                <picture>
+                  <source srcSet="/logo-32.webp" type="image/webp" />
+                  <img
+                    src="/logo.jpeg"
+                    alt="PlayAlong Studio Logo"
+                    width={32}
+                    height={32}
+                    loading="lazy"
+                    className="w-8 h-8 rounded object-cover border border-white/10 shrink-0 cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:border-white/30"
+                    onClick={() => setScreen("upload")}
+                    title="Voltar ao início / Trocar áudio"
+                  />
+                </picture>
                 <div className="time-display">
                   {timecode(position)} <span>/ {timecode(duration)}</span>
                 </div>
@@ -1983,25 +2007,31 @@ export function Studio() {
       )}
 
       {refiningChannelIndex !== null && displayTracks[refiningChannelIndex] && (
-        <InstrumentRefineModal
-          open={refiningChannelIndex !== null}
-          onOpenChange={(open) => {
-            if (!open) setRefiningChannelIndex(null);
-          }}
-          channelIndex={refiningChannelIndex}
-          currentTrackName={displayTracks[refiningChannelIndex]?.name || ""}
-          currentTrackIcon={displayTracks[refiningChannelIndex]?.icon || "synth"}
-          currentTrackColor={displayTracks[refiningChannelIndex]?.color}
-          currentConfidencePercent={displayTracks[refiningChannelIndex]?.confidencePercent}
-          onApplyRefinement={handleApplyRefinement}
-        />
+        <Suspense fallback={null}>
+          <InstrumentRefineModal
+            open={refiningChannelIndex !== null}
+            onOpenChange={(open) => {
+              if (!open) setRefiningChannelIndex(null);
+            }}
+            channelIndex={refiningChannelIndex}
+            currentTrackName={displayTracks[refiningChannelIndex]?.name || ""}
+            currentTrackIcon={displayTracks[refiningChannelIndex]?.icon || "synth"}
+            currentTrackColor={displayTracks[refiningChannelIndex]?.color}
+            currentConfidencePercent={displayTracks[refiningChannelIndex]?.confidencePercent}
+            onApplyRefinement={handleApplyRefinement}
+          />
+        </Suspense>
       )}
 
-      <HfTokenModal
-        open={showHfTokenModal}
-        onOpenChange={setShowHfTokenModal}
-        onSaved={(h) => setAiHealth(h)}
-      />
+      {showHfTokenModal && (
+        <Suspense fallback={null}>
+          <HfTokenModal
+            open={showHfTokenModal}
+            onOpenChange={setShowHfTokenModal}
+            onSaved={(h) => setAiHealth(h)}
+          />
+        </Suspense>
+      )}
     </main>
   );
 }

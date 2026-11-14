@@ -12,6 +12,8 @@ const PRECACHE_ASSETS = [
   "/icon-maskable-512.png",
   "/apple-touch-icon.png",
   "/favicon.ico",
+  "/logo.webp",
+  "/logo-32.webp",
   "/logo.jpeg",
 ];
 
