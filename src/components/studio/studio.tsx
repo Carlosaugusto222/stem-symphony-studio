@@ -613,22 +613,20 @@ export function Studio() {
         return;
       }
       console.error("[Studio ExtractAI Error]", err);
-      setStatus("preview");
       setAiHealth("local");
       setShowFallbackPrompt(true);
       setLastFailedAction(() => () => void extractAI());
-      let friendlyMsg = "O serviço de IA está ocupado ou indisponível no momento. Deseja tentar de novo ou gerar a prévia rápida local?";
+      let friendlyMsg = "O cluster de IA Demucs está ocupado ou indisponível no momento. Faixas locais por frequência preparadas para liberar o mixer.";
       if (err instanceof Error) {
         if (err.message.includes("Token Hugging Face") || err.message.includes("espaço de IA") || err.message.includes("Formato de áudio")) {
           friendlyMsg = err.message;
         } else if (err.message.includes("Failed to fetch") || err.name === "TypeError") {
-          friendlyMsg = "Falha de comunicação com os servidores de IA. Verifique sua conexão e tente de novo.";
-        } else if (err.message) {
-          friendlyMsg = `${err.message} Deseja tentar de novo ou gerar a prévia rápida local?`;
+          friendlyMsg = "Falha de conexão com os servidores de IA Demucs. Faixas locais por frequência preparadas para você ensaiar.";
         }
       }
       setError(friendlyMsg);
-      toast.error("Não foi possível concluir o isolamento com IA.");
+      toast.warning("Serviço de IA indisponível. Carregando faixas locais instantâneas...");
+      void extractLocal();
     }
   }
 
@@ -1430,14 +1428,14 @@ export function Studio() {
                   <Key
                     disabled={busy || !selected.some(Boolean)}
                     onClick={() => void extractLocal()}
-                    title="Prévia rápida gerada localmente no navegador"
+                    title="Isolar faixas localmente por frequências e abrir no mixer sem depender de IA"
                   >
                     {busy && processingMode === "local" ? (
                       <Loader2 className="spin mr-1" size={14} />
                     ) : (
                       <Zap size={14} className="mr-1" />
                     )}
-                    Gerar Prévia Rápida Local
+                    Gerar Faixas Locais (Mixer Rápido)
                   </Key>
                 </>
               )}
