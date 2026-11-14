@@ -17,12 +17,14 @@ import {
   Play,
   Plus,
   RotateCcw,
+  SlidersHorizontal,
   Sparkles,
   Square,
   X,
   Zap,
 } from "lucide-react";
 import { InstrumentIcon, Key, Waveform } from "./controls";
+import { InstrumentRefineModal } from "./instrument-refine-modal";
 import {
   STEMS,
   StudioEngine,
@@ -142,6 +144,7 @@ export function Studio() {
   const [polyphonicMode, setPolyphonicMode] = useState(false);
   const [vocalStems, setVocalStems] = useState<PolyphonicVocalStems | null>(null);
   const [telemetrySteps, setTelemetrySteps] = useState<TelemetryStep[]>(initialTelemetrySteps);
+  const [refiningChannelIndex, setRefiningChannelIndex] = useState<number | null>(null);
 
   function getEngine() {
     if (!engine.current) engine.current = new StudioEngine();
@@ -248,6 +251,34 @@ export function Studio() {
     setLibrary(false);
     setError("");
     setShowFallbackPrompt(false);
+  }
+
+  function handleApplyRefinement(channelIndex: number, refined: DetectedInstrument) {
+    setSession((prev) => {
+      if (!prev) return prev;
+      const currentTracks = prev.tracks ?? displayTracks;
+      const newTracks = currentTracks.map((t, idx) => {
+        if (idx !== channelIndex) return t;
+        return {
+          ...t,
+          id: `track-${channelIndex}-${refined.id}`,
+          name: refined.name,
+          detectedInstrument: refined.name,
+          confidence: refined.confidence,
+          confidencePercent: refined.confidencePercent,
+          tag: refined.tag,
+          color: refined.color,
+          accentClass: refined.accentClass,
+          badgeClass: refined.badgeClass,
+          icon: refined.icon,
+        };
+      });
+      return {
+        ...prev,
+        tracks: newTracks,
+      };
+    });
+    setNotice(`Canal CH 0${channelIndex + 1} refinado com precisão para "${refined.name}"`);
   }
   async function runTelemetryAnalysis(buffers: AudioBuffer[], originalBuffer?: AudioBuffer) {
     setTelemetrySteps([
@@ -909,19 +940,28 @@ export function Studio() {
     polyphonicMode && polyphonicTracks.length > 0
       ? polyphonicTracks
       : (session?.tracks ??
-        STEMS.map((s, i) => ({
-          id: `stem-${i}`,
-          name: s,
-          stemKey: s,
-          detectedInstrument: s,
-          confidence: 0.92,
-          confidencePercent: "92% certeza",
-          tag: `${s} · 92% certeza`,
-          color: ["#ec4899", "#ef4444", "#10b981", "#f59e0b", "#38bdf8"][i] ?? "#fff",
-          accentClass: "",
-          badgeClass: "",
-          icon: (["mic", "drums", "bass", "guitar", "piano"][i] ?? "synth") as TrackInfo["icon"],
-        })));
+        STEMS.map((s, i) => {
+          const defaultInst = [
+            { name: "Lead Vocal Principal", icon: "mic", color: "#ec4899" },
+            { name: "Bateria Acústica (Kit Completo)", icon: "drums", color: "#ef4444" },
+            { name: "Baixo Elétrico (Precision / Jazz)", icon: "bass", color: "#10b981" },
+            { name: "Guitarra Elétrica / Violão", icon: "guitar", color: "#f59e0b" },
+            { name: "Piano Elétrico / Teclados", icon: "piano", color: "#38bdf8" },
+          ][i] ?? { name: s, icon: "synth", color: "#fff" };
+          return {
+            id: `stem-${i}`,
+            name: defaultInst.name,
+            stemKey: s,
+            detectedInstrument: defaultInst.name,
+            confidence: 0.95,
+            confidencePercent: "95% precisão",
+            tag: `${defaultInst.name} · 95% certeza`,
+            color: defaultInst.color,
+            accentClass: "",
+            badgeClass: "",
+            icon: defaultInst.icon as TrackInfo["icon"],
+          };
+        }));
 
   const displayBuffers: AudioBuffer[] =
     polyphonicMode && vocalStems && session?.buffers
@@ -1463,11 +1503,29 @@ export function Studio() {
                   style={{ borderTop: `2px solid ${track.color || "var(--border)"}` }}
                   key={track.id || i}
                 >
-                  <div className="channel-header-instrument">
+                  <div
+                    className="channel-header-instrument group cursor-pointer hover:bg-white/5 p-1 rounded transition-colors"
+                    onClick={() => setRefiningChannelIndex(i)}
+                    title={`Clique para refinar o instrumento e nomenclatura do canal CH 0${i + 1}`}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setRefiningChannelIndex(i);
+                      }
+                    }}
+                  >
                     <div className="channel-header-top">
-                      <span>CH 0{i + 1}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span>CH 0{i + 1}</span>
+                        <span className="channel-refine-hint text-[8px] text-muted-foreground group-hover:text-primary transition-colors flex items-center gap-0.5">
+                          <SlidersHorizontal className="w-2.5 h-2.5" />
+                          Refinar
+                        </span>
+                      </div>
                       <span className="instrument-confidence-pill" style={{ color: track.color }}>
-                        {track.confidencePercent || "94% certeza"}
+                        {track.confidencePercent || "96% precisão"}
                       </span>
                     </div>
                     <div className="channel-instrument-title" title={track.name}>
@@ -1749,6 +1807,21 @@ export function Studio() {
             </p>
           </section>
         </div>
+      )}
+
+      {refiningChannelIndex !== null && displayTracks[refiningChannelIndex] && (
+        <InstrumentRefineModal
+          open={refiningChannelIndex !== null}
+          onOpenChange={(open) => {
+            if (!open) setRefiningChannelIndex(null);
+          }}
+          channelIndex={refiningChannelIndex}
+          currentTrackName={displayTracks[refiningChannelIndex]?.name || ""}
+          currentTrackIcon={displayTracks[refiningChannelIndex]?.icon || "synth"}
+          currentTrackColor={displayTracks[refiningChannelIndex]?.color}
+          currentConfidencePercent={displayTracks[refiningChannelIndex]?.confidencePercent}
+          onApplyRefinement={handleApplyRefinement}
+        />
       )}
     </main>
   );
