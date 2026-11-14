@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Studio architecture
+- Keep browser audio logic in `src/lib/audio` and console views in `src/components/studio`; route modules only mount the console and metadata to keep audio out of SSR execution.
+- Instantiate Web Audio on user interaction and schedule all stems against one AudioContext clock; this preserves synchronized playback and safe SSR.
+- Uploaded local previews use disclosed frequency bands, never claim AI isolation; actual Demucs requires an external processing service.
+- Keep uploaded audio in session memory, not localStorage; large audio buffers are transient and users can export their work.
