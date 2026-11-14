@@ -89,7 +89,10 @@ export function PwaInstallBanner() {
       <div className="flex items-start gap-3">
         <img
           src="/icon-192.png"
-          alt="PlayAlong Studio"
+          alt="Ícone do PlayAlong Studio"
+          width={40}
+          height={40}
+          loading="lazy"
           className="h-10 w-10 shrink-0 rounded-lg border border-white/10 object-cover shadow-md"
         />
         <div className="min-w-0 flex-1">

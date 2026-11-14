@@ -2,19 +2,64 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, FileText, CheckCircle, AlertCircle, Scale, Shield, Cookie } from "lucide-react";
 import { openCookiePreferences } from "@/components/cookie-consent-banner";
 
+const termsStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://playalong.studio/termos-de-uso#webpage",
+  "url": "https://playalong.studio/termos-de-uso",
+  "name": "Termos e Condições de Uso — PlayAlong Studio Multitrack",
+  "description":
+    "Confira as regras e condições de uso do PlayAlong Studio para separação de stems, respeito aos direitos autorais de músicas e execução de áudios.",
+  "inLanguage": "pt-BR",
+  "isPartOf": {
+    "@type": "WebSite",
+    "@id": "https://playalong.studio/#website",
+    "name": "PlayAlong Studio",
+    "url": "https://playalong.studio/",
+  },
+};
+
 export const Route = createFileRoute("/termos-de-uso")({
   head: () => ({
     meta: [
-      { title: "Termos de Uso — PlayAlong Studio" },
+      { title: "Termos e Condições de Uso — PlayAlong Studio Multitrack" },
       {
         name: "description",
         content:
-          "Termos e Condições de Uso do PlayAlong Studio. Regras para separação de faixas, ensaio multitrack e responsabilidade de direitos autorais.",
+          "Confira as regras e condições de uso do PlayAlong Studio para separação de stems, respeito aos direitos autorais de músicas e execução de áudios.",
       },
-      { property: "og:title", content: "Termos de Uso — PlayAlong Studio" },
+      { property: "og:title", content: "Termos e Condições de Uso — PlayAlong Studio Multitrack" },
       {
         property: "og:description",
-        content: "Condições de utilização e direitos autorais no PlayAlong Studio.",
+        content:
+          "Confira as regras e condições de uso do PlayAlong Studio para separação de stems, respeito aos direitos autorais de músicas e execução de áudios.",
+      },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: "https://playalong.studio/termos-de-uso" },
+      { property: "og:site_name", content: "PlayAlong Studio" },
+      { property: "og:locale", content: "pt_BR" },
+      { property: "og:image", content: "https://playalong.studio/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Termos e Condições de Uso — PlayAlong Studio" },
+      { property: "og:image:type", content: "image/png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Termos e Condições de Uso — PlayAlong Studio Multitrack" },
+      {
+        name: "twitter:description",
+        content:
+          "Confira as regras e condições de uso do PlayAlong Studio para separação de stems, respeito aos direitos autorais de músicas e execução de áudios.",
+      },
+      { name: "twitter:image", content: "https://playalong.studio/og-image.png" },
+      { name: "twitter:image:alt", content: "Termos e Condições de Uso — PlayAlong Studio" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://playalong.studio/termos-de-uso" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(termsStructuredData),
       },
     ],
   }),
@@ -27,12 +72,14 @@ export function TermosDeUso() {
       <div className="max-w-[72ch] mx-auto">
         {/* Header Navigation */}
         <header className="mb-8 pb-6 border-b border-zinc-800/80 flex items-center justify-between gap-4">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded p-1"
-          >
-            <ArrowLeft size={14} /> Voltar ao Console de Ensaio
-          </Link>
+          <nav aria-label="Navegação secundária">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded p-1"
+            >
+              <ArrowLeft size={14} /> Voltar ao Console de Ensaio
+            </Link>
+          </nav>
           <div className="flex items-center gap-2">
             <span className="p-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Scale size={14} />
@@ -54,8 +101,8 @@ export function TermosDeUso() {
           </p>
         </div>
 
-        {/* Content Sections */}
-        <div className="space-y-8 text-sm leading-relaxed text-zinc-300">
+        {/* Main Content Sections */}
+        <main className="space-y-8 text-sm leading-relaxed text-zinc-300">
           {/* 1. Objeto */}
           <section className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800">
             <h2 className="text-base font-semibold text-white font-mono mb-2">
@@ -159,7 +206,7 @@ export function TermosDeUso() {
           </section>
 
           {/* Rodapé Interno */}
-          <section className="pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+          <footer className="pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={openCookiePreferences}
@@ -174,8 +221,8 @@ export function TermosDeUso() {
             >
               Ver Política de Privacidade (LGPD) →
             </Link>
-          </section>
-        </div>
+          </footer>
+        </main>
       </div>
     </div>
   );

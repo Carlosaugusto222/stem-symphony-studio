@@ -1052,7 +1052,7 @@ export function Studio() {
                 <source srcSet="/logo.webp" type="image/webp" />
                 <img
                   src="/logo.jpeg"
-                  alt="PlayAlong Studio Logo"
+                  alt="Logotipo do PlayAlong Studio"
                   width={60}
                   height={34}
                   fetchPriority="high"
@@ -1172,8 +1172,8 @@ export function Studio() {
                 </form>
                 <p className="mt-2 text-[10px] text-zinc-500 text-center leading-normal">
                   Ao enviar áudios ou links, você concorda com nossos{" "}
-                  <Link to="/termos-de-uso" className="underline hover:text-zinc-300">Termos</Link> e{" "}
-                  <Link to="/politica-de-privacidade" className="underline hover:text-zinc-300">Privacidade (LGPD)</Link>.
+                  <Link to="/termos-de-uso" className="underline hover:text-zinc-300">Termos de Uso</Link> e{" "}
+                  <Link to="/politica-de-privacidade" className="underline hover:text-zinc-300">Política de Privacidade (LGPD)</Link>.
                   Seus dados não são mantidos em banco permanente.
                 </p>
               </div>
@@ -1401,78 +1401,80 @@ export function Studio() {
             </div>
           )}
 
-          <footer className="studio-footer upload-footer">
-            <span className="footer-engine">
-              <span
-                className={`tiny-led ${aiHealth === "online" ? "led-green" : aiHealth === "connecting" ? "led-blue" : ""}`}
-              />
-              48kHz / 24-bit Lossless Engine
-            </span>
+          <footer className="studio-footer-group mt-auto w-full">
+            <div className="studio-footer upload-footer">
+              <span className="footer-engine">
+                <span
+                  className={`tiny-led ${aiHealth === "online" ? "led-green" : aiHealth === "connecting" ? "led-blue" : ""}`}
+                />
+                48kHz / 24-bit Lossless Engine
+              </span>
 
-            {status !== "empty" && <Key onClick={cancel}>Cancelar Preparação</Key>}
+              {status !== "empty" && <Key onClick={cancel}>Cancelar Preparação</Key>}
 
-            {status === "preview" && (
-              <>
+              {status === "preview" && (
+                <>
+                  <Key
+                    primary
+                    disabled={busy || !selected.some(Boolean)}
+                    onClick={() => void extractAI()}
+                    title="Separar faixas utilizando Demucs v4 na ZeroGPU (gratuito)"
+                  >
+                    {busy && processingMode === "ai" ? (
+                      <Loader2 className="spin mr-1" size={14} />
+                    ) : (
+                      <Sparkles size={14} className="mr-1" />
+                    )}
+                    Separar Faixas com IA (Grátis)
+                  </Key>
+                  <Key
+                    disabled={busy || !selected.some(Boolean)}
+                    onClick={() => void extractLocal()}
+                    title="Prévia rápida gerada localmente no navegador"
+                  >
+                    {busy && processingMode === "local" ? (
+                      <Loader2 className="spin mr-1" size={14} />
+                    ) : (
+                      <Zap size={14} className="mr-1" />
+                    )}
+                    Gerar Prévia Rápida Local
+                  </Key>
+                </>
+              )}
+
+              {status !== "preview" && (
                 <Key
                   primary
-                  disabled={busy || !selected.some(Boolean)}
-                  onClick={() => void extractAI()}
-                  title="Separar faixas utilizando Demucs v4 na ZeroGPU (gratuito)"
+                  disabled={status !== "ready"}
+                  onClick={() => {
+                    if (session) loadSession(session);
+                  }}
                 >
-                  {busy && processingMode === "ai" ? (
-                    <Loader2 className="spin mr-1" size={14} />
-                  ) : (
-                    <Sparkles size={14} className="mr-1" />
-                  )}
-                  Separar Faixas com IA (Grátis)
+                  Abrir Mixer de Ensaio <ArrowRight size={14} className="ml-1" />
                 </Key>
-                <Key
-                  disabled={busy || !selected.some(Boolean)}
-                  onClick={() => void extractLocal()}
-                  title="Prévia rápida gerada localmente no navegador"
-                >
-                  {busy && processingMode === "local" ? (
-                    <Loader2 className="spin mr-1" size={14} />
-                  ) : (
-                    <Zap size={14} className="mr-1" />
-                  )}
-                  Gerar Prévia Rápida Local
-                </Key>
-              </>
-            )}
+              )}
+            </div>
 
-            {status !== "preview" && (
-              <Key
-                primary
-                disabled={status !== "ready"}
-                onClick={() => {
-                  if (session) loadSession(session);
-                }}
+            <nav aria-label="Links institucionais e privacidade" className="studio-legal-bar flex flex-wrap items-center justify-center gap-3 pt-3 pb-6 text-[10px] text-zinc-500 font-mono">
+              <span>PlayAlong Studio © 2026</span>
+              <span>·</span>
+              <Link to="/politica-de-privacidade" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+                Política de Privacidade (LGPD)
+              </Link>
+              <span>·</span>
+              <Link to="/termos-de-uso" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+                Termos de Uso
+              </Link>
+              <span>·</span>
+              <button
+                type="button"
+                onClick={openCookiePreferences}
+                className="hover:text-zinc-300 underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-0 p-0 text-inherit font-inherit"
               >
-                Abrir Mixer de Ensaio <ArrowRight size={14} className="ml-1" />
-              </Key>
-            )}
+                Preferências de Cookies
+              </button>
+            </nav>
           </footer>
-
-          <div className="studio-legal-bar flex flex-wrap items-center justify-center gap-3 pt-3 pb-6 text-[10px] text-zinc-500 font-mono">
-            <span>PlayAlong Studio © 2026</span>
-            <span>·</span>
-            <Link to="/politica-de-privacidade" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
-              Privacidade (LGPD)
-            </Link>
-            <span>·</span>
-            <Link to="/termos-de-uso" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
-              Termos de Uso
-            </Link>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={openCookiePreferences}
-              className="hover:text-zinc-300 underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-0 p-0 text-inherit font-inherit"
-            >
-              Preferências de Cookies
-            </button>
-          </div>
         </>
       ) : (
         <>
@@ -1483,7 +1485,7 @@ export function Studio() {
                   <source srcSet="/logo-32.webp" type="image/webp" />
                   <img
                     src="/logo.jpeg"
-                    alt="PlayAlong Studio Logo"
+                    alt="Logotipo do PlayAlong Studio — Voltar ao início"
                     width={32}
                     height={32}
                     loading="lazy"
@@ -1667,7 +1669,7 @@ export function Studio() {
             {displayTracks.length === 0 ? (
               <div className="col-span-full py-12 px-6 text-center border border-dashed border-white/10 rounded-lg bg-white/[0.02]">
                 <VolumeX className="w-8 h-8 mx-auto mb-2 text-zinc-500" />
-                <h3 className="text-sm font-semibold text-zinc-200">Nenhum canal de áudio disponível</h3>
+                <h2 className="text-sm font-semibold text-zinc-200">Nenhum canal de áudio disponível</h2>
                 <p className="text-xs text-zinc-400 mt-1 max-w-[45ch] mx-auto">
                   Carregue um arquivo de áudio ou execute a demonstração para interagir com os canais do mixer.
                 </p>
@@ -1918,66 +1920,68 @@ export function Studio() {
             </div>
           )}
 
-          <footer className="studio-footer">
-            <Key
-              className="back-upload"
-              onClick={() => {
-                resetTransport();
-                setScreen("upload");
-                setNotice("");
-              }}
-            >
-              <ArrowLeft size={13} className="mr-1" /> Trocar Música
-            </Key>
+          <footer className="studio-footer-group mt-auto w-full">
+            <div className="studio-footer">
+              <Key
+                className="back-upload"
+                onClick={() => {
+                  resetTransport();
+                  setScreen("upload");
+                  setNotice("");
+                }}
+              >
+                <ArrowLeft size={13} className="mr-1" /> Trocar Música
+              </Key>
 
-            <span className="footer-engine">
-              <span className={`tiny-led ${session?.kind === "ai" ? "led-green" : ""}`} />
-              48kHz / 24-bit Lossless Engine
-            </span>
+              <span className="footer-engine">
+                <span className={`tiny-led ${session?.kind === "ai" ? "led-green" : ""}`} />
+                48kHz / 24-bit Lossless Engine
+              </span>
 
-            <Key active={recording} onClick={() => void record()}>
-              {recording ? <Square size={13} /> : <Circle size={10} fill="currentColor" />}
-              {recording ? "Parar Gravação" : "Gravar Ensaio"}
-            </Key>
+              <Key active={recording} onClick={() => void record()}>
+                {recording ? <Square size={13} /> : <Circle size={10} fill="currentColor" />}
+                {recording ? "Parar Gravação" : "Gravar Ensaio"}
+              </Key>
 
-            <Key
-              primary
-              disabled={exporting}
-              onClick={() => void exportAudio("wav")}
-              title="Exportar play-along em WAV 48kHz Lossless"
-            >
-              {exporting ? <Loader2 className="spin" size={13} /> : <Download size={13} />}{" "}
-              Exportar Mixagem (WAV)
-            </Key>
+              <Key
+                primary
+                disabled={exporting}
+                onClick={() => void exportAudio("wav")}
+                title="Exportar play-along em WAV 48kHz Lossless"
+              >
+                {exporting ? <Loader2 className="spin" size={13} /> : <Download size={13} />}{" "}
+                Exportar Mixagem (WAV)
+              </Key>
 
-            <Key
-              disabled={exporting}
-              onClick={() => void exportAudio("mp3")}
-              title="Exportar play-along em MP3 320kbps"
-            >
-              <Download size={13} /> Exportar MP3
-            </Key>
+              <Key
+                disabled={exporting}
+                onClick={() => void exportAudio("mp3")}
+                title="Exportar play-along em MP3 320kbps"
+              >
+                <Download size={13} /> Exportar MP3
+              </Key>
+            </div>
+
+            <nav aria-label="Links institucionais e privacidade" className="studio-legal-bar flex flex-wrap items-center justify-center gap-3 pt-3 pb-6 text-[10px] text-zinc-500 font-mono">
+              <span>PlayAlong Studio © 2026</span>
+              <span>·</span>
+              <Link to="/politica-de-privacidade" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+                Política de Privacidade (LGPD)
+              </Link>
+              <span>·</span>
+              <Link to="/termos-de-uso" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+                Termos de Uso
+              </Link>
+              <span>·</span>
+              <button
+                type="button"
+                onClick={openCookiePreferences}
+                className="hover:text-zinc-300 underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-0 p-0 text-inherit font-inherit"
+              >
+                Preferências de Cookies
+              </button>
+            </nav>
           </footer>
-
-          <div className="studio-legal-bar flex flex-wrap items-center justify-center gap-3 pt-3 pb-6 text-[10px] text-zinc-500 font-mono">
-            <span>PlayAlong Studio © 2026</span>
-            <span>·</span>
-            <Link to="/politica-de-privacidade" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
-              Privacidade (LGPD)
-            </Link>
-            <span>·</span>
-            <Link to="/termos-de-uso" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
-              Termos de Uso
-            </Link>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={openCookiePreferences}
-              className="hover:text-zinc-300 underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-0 p-0 text-inherit font-inherit"
-            >
-              Preferências de Cookies
-            </button>
-          </div>
         </>
       )}
 
@@ -2009,9 +2013,9 @@ export function Studio() {
             {sessions.filter((s) => s.kind !== "demo").length === 0 ? (
               <div className="py-6 px-4 text-center border border-dashed border-white/10 rounded-lg my-3 bg-white/[0.02]">
                 <FolderOpen className="w-8 h-8 mx-auto mb-2 text-zinc-500" />
-                <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide">
+                <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide">
                   Nenhuma faixa personalizada importada
-                </h4>
+                </h3>
                 <p className="text-[11px] text-zinc-400 mt-1 max-w-[40ch] mx-auto leading-relaxed">
                   Arraste arquivos de áudio para o estúdio ou cole um link para processar e isolar faixas nesta sessão.
                 </p>

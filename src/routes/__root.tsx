@@ -94,19 +94,41 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PlayAlong Studio" },
-      { name: "description", content: "Estúdio de ensaio e mixagem multitrack para músicos." },
-      { name: "author", content: "Lovable" },
+      { title: "PlayAlong Studio — Ensaio Multitrack e Mixagem de Stems" },
+      {
+        name: "description",
+        content:
+          "Separe faixas, pratique com play-alongs isolados e controle stems de bateria, baixo e vocais no navegador com sincronia profissional em tempo real.",
+      },
+      { name: "author", content: "PlayAlong Studio" },
       { name: "theme-color", content: "#0e0e11" },
       { name: "application-name", content: "PlayAlong Studio" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "PlayAlong" },
-      { property: "og:title", content: "PlayAlong Studio" },
-      { property: "og:description", content: "Seu console de ensaio multitrack." },
+      { property: "og:site_name", content: "PlayAlong Studio" },
+      { property: "og:locale", content: "pt_BR" },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "PlayAlong Studio — Ensaio Multitrack e Mixagem de Stems" },
+      {
+        property: "og:description",
+        content:
+          "Separe faixas, pratique com play-alongs isolados e controle stems de bateria, baixo e vocais no navegador com sincronia profissional em tempo real.",
+      },
+      { property: "og:image", content: "https://playalong.studio/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:alt", content: "PlayAlong Studio — Console de Ensaio e Mixagem Multitrack" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "PlayAlong Studio — Ensaio Multitrack e Mixagem de Stems" },
+      {
+        name: "twitter:description",
+        content:
+          "Separe faixas, pratique com play-alongs isolados e controle stems de bateria, baixo e vocais no navegador com sincronia profissional em tempo real.",
+      },
+      { name: "twitter:image", content: "https://playalong.studio/og-image.png" },
+      { name: "twitter:image:alt", content: "PlayAlong Studio — Console de Ensaio e Mixagem Multitrack" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

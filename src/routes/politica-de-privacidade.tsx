@@ -2,19 +2,64 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Shield, Lock, FileText, CheckCircle, Cookie, Mail } from "lucide-react";
 import { openCookiePreferences } from "@/components/cookie-consent-banner";
 
+const privacyStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://playalong.studio/politica-de-privacidade#webpage",
+  "url": "https://playalong.studio/politica-de-privacidade",
+  "name": "Política de Privacidade e Dados LGPD — PlayAlong Studio",
+  "description":
+    "Conheça as diretrizes de privacidade e proteção de dados LGPD do PlayAlong Studio: processamento seguro de áudio na memória e controle de cookies.",
+  "inLanguage": "pt-BR",
+  "isPartOf": {
+    "@type": "WebSite",
+    "@id": "https://playalong.studio/#website",
+    "name": "PlayAlong Studio",
+    "url": "https://playalong.studio/",
+  },
+};
+
 export const Route = createFileRoute("/politica-de-privacidade")({
   head: () => ({
     meta: [
-      { title: "Política de Privacidade (LGPD) — PlayAlong Studio" },
+      { title: "Política de Privacidade e Dados LGPD — PlayAlong Studio" },
       {
         name: "description",
         content:
-          "Conheça como o PlayAlong Studio trata seus dados pessoais, arquivos de áudio e privacidade em conformidade com a LGPD (Lei nº 13.709/2018).",
+          "Conheça as diretrizes de privacidade e proteção de dados LGPD do PlayAlong Studio: processamento seguro de áudio na memória e controle de cookies.",
       },
-      { property: "og:title", content: "Política de Privacidade — PlayAlong Studio" },
+      { property: "og:title", content: "Política de Privacidade e Dados LGPD — PlayAlong Studio" },
       {
         property: "og:description",
-        content: "Transparência total sobre dados, áudios e cookies no PlayAlong Studio.",
+        content:
+          "Conheça as diretrizes de privacidade e proteção de dados LGPD do PlayAlong Studio: processamento seguro de áudio na memória e controle de cookies.",
+      },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: "https://playalong.studio/politica-de-privacidade" },
+      { property: "og:site_name", content: "PlayAlong Studio" },
+      { property: "og:locale", content: "pt_BR" },
+      { property: "og:image", content: "https://playalong.studio/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Política de Privacidade — PlayAlong Studio" },
+      { property: "og:image:type", content: "image/png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Política de Privacidade e Dados LGPD — PlayAlong Studio" },
+      {
+        name: "twitter:description",
+        content:
+          "Conheça as diretrizes de privacidade e proteção de dados LGPD do PlayAlong Studio: processamento seguro de áudio na memória e controle de cookies.",
+      },
+      { name: "twitter:image", content: "https://playalong.studio/og-image.png" },
+      { name: "twitter:image:alt", content: "Política de Privacidade — PlayAlong Studio" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://playalong.studio/politica-de-privacidade" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(privacyStructuredData),
       },
     ],
   }),
@@ -27,12 +72,14 @@ export function PoliticaDePrivacidade() {
       <div className="max-w-[72ch] mx-auto">
         {/* Header Navigation */}
         <header className="mb-8 pb-6 border-b border-zinc-800/80 flex items-center justify-between gap-4">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded p-1"
-          >
-            <ArrowLeft size={14} /> Voltar ao Console de Ensaio
-          </Link>
+          <nav aria-label="Navegação secundária">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded p-1"
+            >
+              <ArrowLeft size={14} /> Voltar ao Console de Ensaio
+            </Link>
+          </nav>
           <div className="flex items-center gap-2">
             <span className="p-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Shield size={14} />
@@ -57,8 +104,8 @@ export function PoliticaDePrivacidade() {
           </p>
         </div>
 
-        {/* Content Sections */}
-        <div className="space-y-8 text-sm leading-relaxed text-zinc-300">
+        {/* Main Content Sections */}
+        <main className="space-y-8 text-sm leading-relaxed text-zinc-300">
           {/* 1. Controlador e DPO */}
           <section className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800">
             <h2 className="text-base font-semibold text-white font-mono flex items-center gap-2 mb-3">
@@ -236,8 +283,8 @@ export function PoliticaDePrivacidade() {
             </div>
           </section>
 
-          {/* Gerenciar Cookies */}
-          <section className="pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+          {/* Gerenciar Cookies e Termos */}
+          <footer className="pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={openCookiePreferences}
@@ -252,8 +299,8 @@ export function PoliticaDePrivacidade() {
             >
               Consultar Termos de Uso →
             </Link>
-          </section>
-        </div>
+          </footer>
+        </main>
       </div>
     </div>
   );
