@@ -265,7 +265,9 @@ progress::-moz-progress-bar { background:var(--primary); }
 .transport-keys { display:flex; gap:6px; align-items:center; }
 .transport-keys .studio-key { height:44px; }
 .transport-keys .studio-key:first-child,.transport-keys .studio-key:nth-child(2) { width:44px; padding:0; }
-.seek-bar { width:100%; height:3px; accent-color:var(--primary); cursor:pointer; margin:-9px 0 -15px; }
+.seek-bar { width:100%; height:3px; appearance:none; background:var(--border); cursor:pointer; margin:-9px 0 -15px; }
+.seek-bar::-webkit-slider-thumb { appearance:none; height:7px; width:3px; background:var(--primary); border:0; }
+.seek-bar::-moz-range-thumb { height:7px; width:3px; background:var(--primary); border:0; border-radius:0; }
 .song-sections { display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin-top:0; }
 .song-sections .studio-key { height:28px; border-radius:0; border:0; border-top:2px solid var(--border); justify-content:flex-start; background:transparent; color:var(--muted-foreground); padding:6px 0; box-shadow:none; font-size:9px; }
 .song-sections .studio-key.is-active { border-color:var(--primary); color:var(--lit); }
@@ -321,6 +323,7 @@ progress::-moz-progress-bar { background:var(--primary); }
 .spin { animation:spin 1s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 @media (max-width:1150px) {
+  .fader-area { height:180px; }.fader-track input { height:180px; }
   .studio-header { gap:8px; font-size:9px; }.sample-pill { display:none; }.header-divider { margin:0 2px; }
   .ingestion-grid { grid-template-columns:minmax(0,1fr) 380px; }.quality-toggle .studio-key { font-size:8px; padding:0 8px; }
   .time-display { font-size:22px; }.transport-display { gap:16px; }.song-display { padding-left:16px; }.song-meta { flex-direction:column; gap:5px; }

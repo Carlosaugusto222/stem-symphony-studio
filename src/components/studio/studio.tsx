@@ -134,9 +134,9 @@ export function Studio() {
         <div className="brand"><span className="brand-mark" />PLAYALONG <span>// ENGINE v2.4</span></div>
         <span className="header-divider" />
         <span className="status-pill"><i />STATUS: {busy ? 'PROCESSANDO' : 'PRONTO'}</span>
-        <span className="status-pill">MODELO: DEMUCS v4 HD</span>
+        <span className="status-pill" title="Demucs HD ainda não conectado">DEMUCS v4 HD · OFFLINE</span>
         <span className="status-pill sample-pill">48kHz LOSSLESS</span>
-        <Key className="library-key" onClick={() => setLibrary(true)}><FolderOpen /> BIBLIOTECA DE FAIXAS <span className="muted">({sessions.length})</span></Key>
+        <Key className="library-key" onClick={() => setLibrary(true)}><FolderOpen /> BIBLIOTECA DE FAIXAS <span className="muted">({sessions.filter(s => s.kind !== 'demo').length + 1})</span></Key>
       </header>
       <div className="ingestion-grid">
         <section className="drop-panel">
@@ -181,7 +181,7 @@ export function Studio() {
         return <article className={`channel-strip ${silent ? 'channel-muted' : ''}`} key={s}>
           <header><span>CH 0{i + 1}</span><h2>{s}</h2></header><Waveform buffer={session?.buffers[i]} muted={silent} />
           <div className="channel-keys"><Key active={c.solo} aria-pressed={c.solo} aria-label={`Solo ${s}`} onClick={() => changeChannel(i, { solo: !c.solo })}>SOLO</Key><Key active={c.mute} aria-pressed={c.mute} aria-label={`Mute ${s}`} onClick={() => changeChannel(i, { mute: !c.mute })}>MUTE</Key></div>
-          <div className="fader-area"><div className="level-meter">{Array.from({ length: 10 }, (_, j) => <i key={j} className={playing && !silent && j < (meters[i] ?? 0) ? 'lit' : ''} />)}</div><div className="fader-scale">{['+6', '0', '-10', '-30', '-∞'].map(v => <span key={v}>{v}</span>)}</div><div className="fader-track"><input type="range" min={-60} max={6} step={.1} value={c.db} aria-label={`Volume ${s} em dB`} onChange={e => changeChannel(i, { db: Number(e.target.value), mute: false })} /></div></div>
+          <div className="fader-area"><div className="level-meter">{Array.from({ length: 10 }, (_, j) => <i key={j} className={playing && !silent && j < (meters[i] ?? 0) ? 'lit' : ''} />)}</div><div className="fader-scale">{['+6', '0', '-10', '-30', '-∞'].map(v => <span key={v}>{v}</span>)}</div><div className="fader-track"><input type="range" min={-60} max={6} step={.01} value={c.mute ? -60 : c.db} aria-label={`Volume ${s} em dB`} onChange={e => changeChannel(i, { db: Number(e.target.value), mute: false })} /></div></div>
           <div className="channel-bottom"><label className="pan-knob" title={`Pan ${s}`}><input type="range" min={-1} max={1} step={.01} value={c.pan} aria-label={`Pan ${s}`} onChange={e => changeChannel(i, { pan: Number(e.target.value) })} /><svg viewBox="0 0 32 32"><line x1="16" y1="6" x2="16" y2="14" transform={`rotate(${c.pan * 120} 16 16)`} /></svg></label><output>{silent ? '-∞' : c.db.toFixed(1)} dB</output><span>{c.pan === 0 ? 'C' : `${c.pan < 0 ? 'L' : 'R'}${Math.round(Math.abs(c.pan) * 100)}`}</span></div>
           <Key className="channel-guide" active={Math.abs(c.db - 20 * Math.log10(.2)) < .01 && !c.mute} aria-label={`Guia 20% ${s}`} onClick={() => setChannels(cs => cs.map((v, j) => j === i ? guideChannel(v) : v))}>GUIA 20%</Key>
         </article>;
