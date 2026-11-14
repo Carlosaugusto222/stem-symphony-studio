@@ -17,6 +17,7 @@ import { ErrorBoundary } from "../components/error-boundary";
 import { Toaster } from "../components/ui/sonner";
 import { registerPwaServiceWorker } from "../lib/pwa-register";
 import { PwaInstallBanner } from "../components/pwa-install-banner";
+import { CookieConsentBanner } from "../components/cookie-consent-banner";
 
 export function NotFoundComponent() {
   return (
@@ -158,6 +159,7 @@ function RootComponent() {
         <Outlet />
       </ErrorBoundary>
       <PwaInstallBanner />
+      <CookieConsentBanner />
       <Toaster position="bottom-right" richColors theme="dark" />
     </QueryClientProvider>
   );

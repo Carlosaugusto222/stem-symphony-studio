@@ -15,6 +15,13 @@ describe("App routing", () => {
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
 
+  it("matches LGPD legal pages instead of falling back to not found", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    expect(router.matchRoutes("/politica-de-privacidade").at(-1)?.routeId).toBe("/politica-de-privacidade");
+    expect(router.matchRoutes("/termos-de-uso").at(-1)?.routeId).toBe("/termos-de-uso");
+  });
+
   it("falls back to root route not found for unknown paths", () => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
 

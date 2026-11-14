@@ -25,8 +25,10 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { openCookiePreferences } from "@/components/cookie-consent-banner";
 import { InstrumentIcon, Key, Waveform } from "./controls";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
@@ -1168,6 +1170,12 @@ export function Studio() {
                     Carregar Link
                   </Key>
                 </form>
+                <p className="mt-2 text-[10px] text-zinc-500 text-center leading-normal">
+                  Ao enviar áudios ou links, você concorda com nossos{" "}
+                  <Link to="/termos-de-uso" className="underline hover:text-zinc-300">Termos</Link> e{" "}
+                  <Link to="/politica-de-privacidade" className="underline hover:text-zinc-300">Privacidade (LGPD)</Link>.
+                  Seus dados não são mantidos em banco permanente.
+                </p>
               </div>
             </section>
 
@@ -1445,6 +1453,26 @@ export function Studio() {
               </Key>
             )}
           </footer>
+
+          <div className="studio-legal-bar flex flex-wrap items-center justify-center gap-3 pt-3 pb-6 text-[10px] text-zinc-500 font-mono">
+            <span>PlayAlong Studio © 2026</span>
+            <span>·</span>
+            <Link to="/politica-de-privacidade" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+              Privacidade (LGPD)
+            </Link>
+            <span>·</span>
+            <Link to="/termos-de-uso" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+              Termos de Uso
+            </Link>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={openCookiePreferences}
+              className="hover:text-zinc-300 underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-0 p-0 text-inherit font-inherit"
+            >
+              Preferências de Cookies
+            </button>
+          </div>
         </>
       ) : (
         <>
@@ -1930,6 +1958,26 @@ export function Studio() {
               <Download size={13} /> Exportar MP3
             </Key>
           </footer>
+
+          <div className="studio-legal-bar flex flex-wrap items-center justify-center gap-3 pt-3 pb-6 text-[10px] text-zinc-500 font-mono">
+            <span>PlayAlong Studio © 2026</span>
+            <span>·</span>
+            <Link to="/politica-de-privacidade" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+              Privacidade (LGPD)
+            </Link>
+            <span>·</span>
+            <Link to="/termos-de-uso" className="hover:text-zinc-300 underline underline-offset-2 transition-colors">
+              Termos de Uso
+            </Link>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={openCookiePreferences}
+              className="hover:text-zinc-300 underline underline-offset-2 transition-colors cursor-pointer bg-transparent border-0 p-0 text-inherit font-inherit"
+            >
+              Preferências de Cookies
+            </button>
+          </div>
         </>
       )}
 

@@ -151,7 +151,10 @@ export function HfTokenModal({ open, onOpenChange, onSaved }: HfTokenModalProps)
               </button>
             </div>
             <p className="text-[11px] text-zinc-500">
-              O token é salvo de forma segura no seu navegador (armazenamento local).
+              O token é salvo unicamente no seu navegador (armazenamento local) em conformidade com nossa{" "}
+              <a href="/politica-de-privacidade" target="_blank" rel="noreferrer" className="underline text-zinc-400 hover:text-white">
+                Política de Privacidade (LGPD)
+              </a>.
             </p>
           </div>
 
