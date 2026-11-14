@@ -294,18 +294,18 @@ export function InstrumentRefineModal({
             type="button"
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="h-8 text-xs text-zinc-400 hover:text-zinc-200"
+            className="h-8 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
           >
-            Cancelar
+            Cancelar Edição
           </Button>
 
           <Button
             type="button"
             onClick={handleConfirm}
             disabled={!selectedInstrumentId && !customName.trim()}
-            className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium"
+            className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors shadow-sm"
           >
-            Confirmar Refinamento
+            Aplicar ao Canal
           </Button>
         </DialogFooter>
       </DialogContent>

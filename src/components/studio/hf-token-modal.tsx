@@ -169,9 +169,9 @@ export function HfTokenModal({ open, onOpenChange, onSaved }: HfTokenModalProps)
                 variant="ghost"
                 size="sm"
                 onClick={handleRemove}
-                className="text-red-400 hover:text-red-300 hover:bg-red-950/30 text-xs h-8 px-2"
+                className="text-red-400 hover:text-red-300 hover:bg-red-950/30 text-xs h-8 px-2 transition-colors"
               >
-                <Trash2 size={13} className="mr-1" /> Remover
+                <Trash2 size={13} className="mr-1" /> Remover Token
               </Button>
             )}
           </div>
@@ -182,20 +182,20 @@ export function HfTokenModal({ open, onOpenChange, onSaved }: HfTokenModalProps)
               size="sm"
               onClick={handleTest}
               disabled={testing || !token.trim()}
-              className="border-zinc-800 hover:bg-zinc-900 text-xs h-8"
+              className="border-zinc-800 hover:bg-zinc-900 text-xs h-8 transition-colors"
             >
               {testing ? <Loader2 size={12} className="spin mr-1" /> : null}
-              Testar Conexão
+              Testar Conexão Demucs
             </Button>
             <Button
               type="button"
               size="sm"
               onClick={handleSave}
               disabled={testing}
-              className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-xs h-8"
+              className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-xs h-8 transition-colors shadow-sm"
             >
               {testing ? <Loader2 size={12} className="spin mr-1" /> : null}
-              Salvar e Ativar
+              Salvar Token de IA
             </Button>
           </div>
         </DialogFooter>

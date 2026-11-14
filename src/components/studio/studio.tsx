@@ -1034,8 +1034,8 @@ export function Studio() {
             )}
 
             <span className="status-pill sample-pill">48kHz LOSSLESS</span>
-            <Key className="library-key" onClick={() => setLibrary(true)}>
-              <FolderOpen /> BIBLIOTECA DE FAIXAS{" "}
+            <Key className="library-key" onClick={() => setLibrary(true)} aria-label="Abrir biblioteca de faixas">
+              <FolderOpen size={14} className="mr-1.5" /> BIBLIOTECA DE FAIXAS{" "}
               <span className="muted">
                 ({sessions.filter((s) => s.kind !== "demo").length + 1})
               </span>
@@ -1065,8 +1065,8 @@ export function Studio() {
                   aria-label="Enviar arquivo de áudio"
                 >
                   <Waveform />
-                  <h1>ARRASTE SEU ÁUDIO OU CLIQUE PARA ENVIAR</h1>
-                  <span>WAV · FLAC · MP3 ATÉ 120MB</span>
+                  <h1>Arraste seu áudio ou clique para enviar</h1>
+                  <span>WAV · FLAC · MP3 · AIFF · M4A (ATÉ 120MB)</span>
                 </Key>
                 <input
                   ref={fileInput}
@@ -1095,14 +1095,17 @@ export function Studio() {
                     disabled={busy}
                   />
                   <Key type="submit" disabled={busy || !url}>
-                    CARREGAR
+                    Carregar Link
                   </Key>
                 </form>
               </div>
             </section>
 
             <section className="selection-panel">
-              <h2>CANAIS A EXTRAIR &gt;</h2>
+              <div className="panel-header-block">
+                <h2 className="panel-section-title">Canais a Extrair</h2>
+                <p className="panel-section-subtitle">Escolha as faixas a isolar para praticar</p>
+              </div>
               <div className="stem-select">
                 {STEMS.map((s, i) => (
                   <Key
@@ -1112,12 +1115,15 @@ export function Studio() {
                     disabled={busy}
                     onClick={() => setSelected((ss) => ss.map((v, j) => (j === i ? !v : v)))}
                   >
-                    {selected[i] && <Check size={12} />}
-                    {i === 4 ? "TECLADOS / OUTROS" : s}
+                    {selected[i] && <Check size={12} className="mr-1" />}
+                    {i === 4 ? "Teclados / Outros" : s}
                   </Key>
                 ))}
               </div>
-              <h2 className="quality-label">QUALIDADE &gt;</h2>
+              <div className="panel-header-block quality-label">
+                <h2 className="panel-section-title">Qualidade de Isolamento</h2>
+                <p className="panel-section-subtitle">Modo Estúdio para precisão ou Rápido para teste</p>
+              </div>
               <div className="quality-toggle">
                 <Key
                   active={quality === "studio"}
@@ -1125,14 +1131,14 @@ export function Studio() {
                   disabled={busy}
                   onClick={() => setQuality("studio")}
                 >
-                  MODO ESTÚDIO - ALTA FIDELIDADE
+                  Modo Estúdio (Alta Fidelidade)
                 </Key>
                 <Key
                   primary={quality === "fast"}
                   disabled={busy}
                   onClick={() => setQuality("fast")}
                 >
-                  MODO RÁPIDO
+                  Modo Rápido
                 </Key>
               </div>
             </section>
@@ -1141,15 +1147,15 @@ export function Studio() {
           {status === "empty" ? (
             <section className="empty-monitor">
               <div className="empty-label">
-                <span className="tiny-led" /> SESSÃO DE ENSAIO
+                <span className="tiny-led" /> Sessão de Demonstração
               </div>
               <div className="demo-content">
                 <div>
                   <h2>Seu próximo ensaio começa aqui.</h2>
-                  <p>MATTE SESSION · D MAIOR · 125 BPM · 5 STEMS</p>
+                  <p>MATTE SESSION · TOM D MAIOR · 125 BPM · 5 FAIXAS INDEPENDENTES</p>
                 </div>
                 <Key primary onClick={() => void demo()}>
-                  <Play size={14} /> OUVIR DEMONSTRAÇÃO <ArrowRight size={14} />
+                  <Play size={14} className="mr-1" /> Ouvir Demonstração Multitrack <ArrowRight size={14} className="ml-1" />
                 </Key>
               </div>
               <div className="empty-tracks">
@@ -1161,7 +1167,7 @@ export function Studio() {
                 ))}
               </div>
               <div className="demo-note">
-                Composição original de demonstração · Voz sintetizada e instrumentos independentes
+                Composição original de demonstração · Voz sintetizada e instrumentos isolados para você testar os faders e o play-along.
               </div>
             </section>
           ) : (
@@ -1271,11 +1277,10 @@ export function Studio() {
                   onClick={() => setShowHfTokenModal(true)}
                   title="Configurar ou inserir seu Token de IA Hugging Face"
                 >
-                  <KeyRound size={13} /> CONFIGURAR TOKEN HF
+                  <KeyRound size={13} className="mr-1" /> Configurar Token HF
                 </Key>
                 {showFallbackPrompt && (
                   <Key
-                    primary
                     onClick={() => {
                       setError("");
                       setShowFallbackPrompt(false);
@@ -1283,10 +1288,10 @@ export function Studio() {
                     }}
                     title="Prosseguir usando prévia local instantânea sem IA"
                   >
-                    <Zap size={13} /> USAR PRÉVIA LOCAL INSTANTÂNEA
+                    <Zap size={13} className="mr-1" /> Gerar Prévia Rápida Local
                   </Key>
                 )}
-                <Key size="icon" aria-label="Fechar erro" onClick={() => setError("")}>
+                <Key size="icon" aria-label="Fechar mensagem de erro" onClick={() => setError("")}>
                   <X />
                 </Key>
               </div>
@@ -1307,7 +1312,7 @@ export function Studio() {
               48kHz / 24-bit Lossless Engine
             </span>
 
-            {status !== "empty" && <Key onClick={cancel}>CANCELAR</Key>}
+            {status !== "empty" && <Key onClick={cancel}>Cancelar Preparação</Key>}
 
             {status === "preview" && (
               <>
@@ -1317,14 +1322,14 @@ export function Studio() {
                   onClick={() => void extractAI()}
                   title="Separar faixas utilizando Demucs v4 na ZeroGPU (gratuito)"
                 >
-                  <Sparkles size={14} /> SEPARAR COM IA (GRÁTIS)
+                  <Sparkles size={14} className="mr-1" /> Separar Faixas com IA (Grátis)
                 </Key>
                 <Key
                   disabled={!selected.some(Boolean)}
                   onClick={() => void extractLocal()}
                   title="Prévia rápida gerada localmente no navegador"
                 >
-                  <Zap size={14} /> PRÉVIA RÁPIDA LOCAL (OFFLINE)
+                  <Zap size={14} className="mr-1" /> Gerar Prévia Rápida Local
                 </Key>
               </>
             )}
@@ -1337,7 +1342,7 @@ export function Studio() {
                   if (session) loadSession(session);
                 }}
               >
-                ABRIR NO MIXER DE ENSAIO <ArrowRight size={14} />
+                Abrir Mixer de Ensaio <ArrowRight size={14} className="ml-1" />
               </Key>
             )}
           </footer>
@@ -1443,7 +1448,7 @@ export function Studio() {
               </Key>
               <Key active={click} aria-pressed={click} onClick={() => setClick(!click)}>
                 <span className="tiny-led" />
-                {click ? "CLICK ON" : "CLICK OFF"}
+                {click ? "Metrônomo Ligado" : "Metrônomo Desligado"}
               </Key>
             </div>
           </section>
@@ -1490,14 +1495,14 @@ export function Studio() {
               >
                 <Layers size={13} className="mr-1.5" />
                 {polyphonicMode
-                  ? "CANAIS POLIFÔNICOS ATIVOS (3 VOZES)"
-                  : "DESMEMBRAR VOZES (POLIFÔNICO)"}
+                  ? "Canais Polifônicos Ativos (3 Vozes)"
+                  : "Desmembrar Vozes em 3 Canais"}
               </Key>
             </div>
           )}
 
           <section className="practice-strip">
-            <span>PRÁTICA ATIVA &gt;</span>
+            <span>Instrumento em Prática:</span>
             <div className="practice-instruments">
               {displayTracks.map((t, i) => (
                 <Key
@@ -1511,16 +1516,16 @@ export function Studio() {
                 >
                   <InstrumentIcon icon={t.icon} className="mr-1" />
                   {t.isVocalPart ? t.name.replace("Voz ", "V") : t.name}
-                  {practice === i && channels[i]?.mute ? " (MUTED)" : ""}
+                  {practice === i && channels[i]?.mute ? " (MUDO)" : ""}
                 </Key>
               ))}
             </div>
             <div className="practice-mode">
               <Key primary={!guide} onClick={() => setGuideMode(false)}>
-                MUTE TOTAL
+                Mudo Total
               </Key>
               <Key primary={guide} onClick={() => setGuideMode(true)}>
-                GUIA 20%
+                Guia 20%
               </Key>
             </div>
           </section>
@@ -1677,10 +1682,10 @@ export function Studio() {
 
           <section className="study-tools">
             <label>
-              VELOCIDADE{" "}
+              Velocidade{" "}
               <input
                 type="range"
-                aria-label="Velocidade"
+                aria-label="Velocidade de reprodução"
                 min={50}
                 max={150}
                 value={speed}
@@ -1707,7 +1712,7 @@ export function Studio() {
                 setLoop(!loop);
               }}
             >
-              LOOP A-B
+              Loop A-B
             </Key>
             <Key
               title="Definir início do loop"
@@ -1727,27 +1732,27 @@ export function Studio() {
             </Key>
             <Key
               className="reset-mix"
-              title="Restaurar mixagem"
+              title="Restaurar mixagem padrão"
               onClick={() => {
                 setChannels(initialChannels(displayTracks.length));
                 setPractice(null);
               }}
             >
-              <RotateCcw /> RESET
+              <RotateCcw size={13} className="mr-1" /> Restaurar Mixagem
             </Key>
           </section>
 
           {error && (
             <div className="feedback error" role="alert">
-              {error}
-              <Key size="icon" aria-label="Fechar erro" onClick={() => setError("")}>
+              <span>{error}</span>
+              <Key size="icon" aria-label="Fechar mensagem de erro" onClick={() => setError("")}>
                 <X />
               </Key>
             </div>
           )}
           {notice && (
             <div className="feedback" role="status">
-              {notice}
+              <span>{notice}</span>
             </div>
           )}
 
@@ -1760,7 +1765,7 @@ export function Studio() {
                 setNotice("");
               }}
             >
-              <ArrowLeft /> CARREGAR OUTRA MÚSICA
+              <ArrowLeft size={13} className="mr-1" /> Trocar Música
             </Key>
 
             <span className="footer-engine">
@@ -1769,8 +1774,8 @@ export function Studio() {
             </span>
 
             <Key active={recording} onClick={() => void record()}>
-              {recording ? <Square /> : <Circle size={10} fill="currentColor" />}
-              {recording ? "PARAR GRAVAÇÃO" : "REC PERFORMANCE"}
+              {recording ? <Square size={13} /> : <Circle size={10} fill="currentColor" />}
+              {recording ? "Parar Gravação" : "Gravar Ensaio"}
             </Key>
 
             <Key
@@ -1779,7 +1784,8 @@ export function Studio() {
               onClick={() => void exportAudio("wav")}
               title="Exportar play-along em WAV 48kHz Lossless"
             >
-              {exporting ? <Loader2 className="spin" /> : <Download />} EXPORTAR WAV
+              {exporting ? <Loader2 className="spin" size={13} /> : <Download size={13} />}{" "}
+              Exportar Mixagem (WAV)
             </Key>
 
             <Key
@@ -1787,7 +1793,7 @@ export function Studio() {
               onClick={() => void exportAudio("mp3")}
               title="Exportar play-along em MP3 320kbps"
             >
-              <Download /> EXPORTAR MP3
+              <Download size={13} /> Exportar MP3
             </Key>
           </footer>
         </>
@@ -1803,7 +1809,7 @@ export function Studio() {
             onClick={(e) => e.stopPropagation()}
           >
             <header>
-              <h2>BIBLIOTECA DE FAIXAS</h2>
+              <h2>Biblioteca de Faixas</h2>
               <Key size="icon" aria-label="Fechar biblioteca" onClick={() => setLibrary(false)}>
                 <X />
               </Key>
@@ -1812,7 +1818,7 @@ export function Studio() {
               <Headphones />
               <div>
                 <h3>MATTE SESSION</h3>
-                <span>D MAIOR · 125 BPM · 5 STEMS · DEMONSTRAÇÃO</span>
+                <span>TOM D MAIOR · 125 BPM · 5 STEMS · DEMONSTRAÇÃO</span>
               </div>
               <Key primary onClick={() => void demo()} aria-label="Abrir demonstração">
                 <Play />
@@ -1836,7 +1842,7 @@ export function Studio() {
                 </div>
               ))}
             <p className="library-note">
-              Os áudios enviados ficam nesta sessão do navegador. Baixe sua mixagem antes de fechar.
+              Os áudios enviados ficam nesta sessão do navegador. Lembre-se de exportar sua mixagem antes de fechar a janela.
             </p>
           </section>
         </div>
