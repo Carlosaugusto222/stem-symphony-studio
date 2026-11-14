@@ -23,12 +23,64 @@ export interface DemucsSeparationOptions {
   onCancelCreated?: (cancelFn: () => Promise<void>) => void;
 }
 
+const STORAGE_KEY = "hf_token";
+
+export function getStoredHuggingFaceToken(): string {
+  if (typeof window !== "undefined" && window.localStorage) {
+    return (
+      window.localStorage.getItem(STORAGE_KEY) ||
+      window.localStorage.getItem("VITE_HUGGINGFACE_TOKEN") ||
+      window.localStorage.getItem("huggingface_token") ||
+      ""
+    ).trim();
+  }
+  return "";
+}
+
+export function setStoredHuggingFaceToken(token: string): void {
+  if (typeof window !== "undefined" && window.localStorage) {
+    const trimmed = token.trim();
+    if (trimmed) {
+      window.localStorage.setItem(STORAGE_KEY, trimmed);
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem("VITE_HUGGINGFACE_TOKEN");
+      window.localStorage.removeItem("huggingface_token");
+    }
+  }
+  resetDemucsHealthCache();
+}
+
+// Auto-consumo de token via URL query parameter (ex: ?hf_token=... ou ?token=...)
+if (typeof window !== "undefined" && window.location) {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramToken = urlParams.get("hf_token") || urlParams.get("token");
+    if (paramToken && paramToken.startsWith("hf_")) {
+      setStoredHuggingFaceToken(paramToken);
+      urlParams.delete("hf_token");
+      urlParams.delete("token");
+      const newSearch = urlParams.toString();
+      const newUrl =
+        window.location.pathname + (newSearch ? `?${newSearch}` : "") + window.location.hash;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  } catch {
+    /* ignore search param errors */
+  }
+}
+
 export function getHuggingFaceConfig() {
+  const storedToken = getStoredHuggingFaceToken();
+
   const envToken =
     typeof import.meta !== "undefined" && import.meta.env
       ? (import.meta.env.VITE_HUGGINGFACE_TOKEN as string | undefined) ||
         (import.meta.env.HUGGINGFACE_TOKEN as string | undefined)
       : undefined;
+
+  const rawToken =
+    storedToken || (envToken && envToken.trim().length > 0 ? envToken.trim() : undefined);
 
   const envSpace =
     typeof import.meta !== "undefined" && import.meta.env
@@ -37,7 +89,7 @@ export function getHuggingFaceConfig() {
       : undefined;
 
   return {
-    token: envToken && envToken.trim().length > 0 ? envToken.trim() : undefined,
+    token: rawToken && rawToken.length > 0 ? rawToken : undefined,
     space: envSpace && envSpace.trim().length > 0 ? envSpace.trim() : "teamup-tech/Demucs",
     fallbackSpaces: ["teamup-tech/Demucs", "fffiloni/demucs", "ahmetk/demucs"],
   };
@@ -45,24 +97,36 @@ export function getHuggingFaceConfig() {
 
 let cachedHealth: { status: DemucsHealth; timestamp: number } | null = null;
 
-export async function checkDemucsHealth(): Promise<DemucsHealth> {
+export async function checkDemucsHealth(customToken?: string): Promise<DemucsHealth> {
   const now = Date.now();
-  if (cachedHealth && now - cachedHealth.timestamp < 30000) {
+  if (!customToken && cachedHealth && now - cachedHealth.timestamp < 30000) {
     return cachedHealth.status;
   }
 
-  const { space, token } = getHuggingFaceConfig();
+  const { space, token: configToken } = getHuggingFaceConfig();
+  const token = customToken !== undefined ? customToken.trim() || undefined : configToken;
+
   try {
-    const clientOptions = token ? { hf_token: token as `hf_${string}` } : {};
-    const client = await Client.connect(space, clientOptions);
+    const clientOptions = token
+      ? { token: token as `hf_${string}`, hf_token: token as `hf_${string}` }
+      : {};
+
+    const connectPromise = Client.connect(space, clientOptions);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout conectando ao Demucs")), 12000),
+    );
+
+    const client = await Promise.race([connectPromise, timeoutPromise]);
     if (client) {
-      cachedHealth = { status: "online", timestamp: now };
+      if (!customToken) {
+        cachedHealth = { status: "online", timestamp: now };
+      }
       return "online";
     }
-    cachedHealth = { status: "local", timestamp: now };
+    if (!customToken) cachedHealth = { status: "local", timestamp: now };
     return "local";
   } catch {
-    cachedHealth = { status: "local", timestamp: now };
+    if (!customToken) cachedHealth = { status: "local", timestamp: now };
     return "local";
   }
 }
@@ -225,7 +289,9 @@ export async function separateAudioDemucs(
     });
 
     try {
-      const clientOptions = token ? { hf_token: token as `hf_${string}` } : {};
+      const clientOptions = token
+        ? { token: token as `hf_${string}`, hf_token: token as `hf_${string}` }
+        : {};
       const app = await Client.connect(currentSpace, {
         ...clientOptions,
         events: ["status", "data"],
@@ -292,6 +358,8 @@ export async function separateAudioDemucs(
           }
         }, 600);
       };
+
+      startProgressSimulation();
 
       try {
         for await (const msg of job) {
@@ -470,5 +538,10 @@ export async function separateAudioDemucs(
   }
 
   cachedHealth = { status: "local", timestamp: Date.now() };
+  if (!token) {
+    throw new Error(
+      "O cluster Demucs v4 ZeroGPU requer um Token Hugging Face para iniciar o processamento. Clique no botão de IA no topo para inserir seu token.",
+    );
+  }
   throw lastError ?? new Error("O serviço de IA está ocupado ou indisponível.");
 }

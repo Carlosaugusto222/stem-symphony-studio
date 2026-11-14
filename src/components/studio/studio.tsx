@@ -20,11 +20,13 @@ import {
   SlidersHorizontal,
   Sparkles,
   Square,
+  KeyRound,
   X,
   Zap,
 } from "lucide-react";
 import { InstrumentIcon, Key, Waveform } from "./controls";
 import { InstrumentRefineModal } from "./instrument-refine-modal";
+import { HfTokenModal } from "./hf-token-modal";
 import {
   STEMS,
   StudioEngine,
@@ -145,6 +147,7 @@ export function Studio() {
   const [vocalStems, setVocalStems] = useState<PolyphonicVocalStems | null>(null);
   const [telemetrySteps, setTelemetrySteps] = useState<TelemetryStep[]>(initialTelemetrySteps);
   const [refiningChannelIndex, setRefiningChannelIndex] = useState<number | null>(null);
+  const [showHfTokenModal, setShowHfTokenModal] = useState(false);
 
   function getEngine() {
     if (!engine.current) engine.current = new StudioEngine();
@@ -571,7 +574,9 @@ export function Studio() {
       setAiHealth("local");
       setShowFallbackPrompt(true);
       setError(
-        "O serviço de IA está ocupado ou indisponível no momento. Deseja usar a prévia local instantânea?",
+        err instanceof Error && err.message
+          ? `${err.message} Deseja usar a prévia local instantânea ou configurar seu Token HF?`
+          : "O serviço de IA está ocupado ou indisponível no momento. Deseja usar a prévia local instantânea?",
       );
     }
   }
@@ -995,31 +1000,37 @@ export function Studio() {
             </span>
 
             {aiHealth === "connecting" && (
-              <span
-                className="status-pill status-connecting"
-                title="Verificando disponibilidade da GPU Demucs v4"
+              <button
+                type="button"
+                onClick={() => setShowHfTokenModal(true)}
+                className="status-pill status-connecting cursor-pointer hover:opacity-90 transition-opacity bg-transparent border-0 text-inherit p-0 font-inherit"
+                title="Verificando disponibilidade da GPU Demucs v4. Clique para configurar Token."
               >
                 <i className="led-blue" />
                 DEMUCS v4 · CONECTANDO IA...
-              </span>
+              </button>
             )}
             {aiHealth === "online" && (
-              <span
-                className="status-pill status-online"
-                title="Cluster ZeroGPU ativo e pronto para separação"
+              <button
+                type="button"
+                onClick={() => setShowHfTokenModal(true)}
+                className="status-pill status-online cursor-pointer hover:opacity-90 transition-opacity bg-transparent border-0 text-inherit p-0 font-inherit"
+                title="Cluster ZeroGPU ativo e pronto para separação. Clique para gerenciar Token."
               >
                 <i className="led-green" />
                 DEMUCS v4 · IA ONLINE (ZeroGPU)
-              </span>
+              </button>
             )}
             {aiHealth === "local" && (
-              <span
-                className="status-pill status-local"
-                title="Modo local de fallback instantâneo por filtros"
+              <button
+                type="button"
+                onClick={() => setShowHfTokenModal(true)}
+                className="status-pill status-local cursor-pointer hover:opacity-90 transition-opacity bg-transparent border-0 text-inherit p-0 font-inherit"
+                title="Modo local de fallback ativo. Clique para inserir seu Token Hugging Face e ativar a IA."
               >
                 <i className="led-amber" />
-                DEMUCS v4 · MODO LOCAL
-              </span>
+                DEMUCS v4 · CONFIGURAR IA
+              </button>
             )}
 
             <span className="status-pill sample-pill">48kHz LOSSLESS</span>
@@ -1256,6 +1267,12 @@ export function Studio() {
             <div className="feedback error" role="alert">
               <span>{error}</span>
               <div className="feedback-actions">
+                <Key
+                  onClick={() => setShowHfTokenModal(true)}
+                  title="Configurar ou inserir seu Token de IA Hugging Face"
+                >
+                  <KeyRound size={13} /> CONFIGURAR TOKEN HF
+                </Key>
                 {showFallbackPrompt && (
                   <Key
                     primary
@@ -1839,6 +1856,12 @@ export function Studio() {
           onApplyRefinement={handleApplyRefinement}
         />
       )}
+
+      <HfTokenModal
+        open={showHfTokenModal}
+        onOpenChange={setShowHfTokenModal}
+        onSaved={(h) => setAiHealth(h)}
+      />
     </main>
   );
 }
