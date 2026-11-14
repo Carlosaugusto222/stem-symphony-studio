@@ -219,7 +219,7 @@
   box-shadow: 0 2px 8px oklch(0 0 0 / 25%);
 }
 .studio-key:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.98);
   box-shadow: var(--key-shadow);
 }
 .studio-key:focus-visible {
@@ -243,8 +243,12 @@
   background: var(--lit);
   color: var(--primary-foreground);
   border-color: var(--lit);
-  box-shadow: 0 3px 12px oklch(1 0 0 / 22%);
-  transform: translateY(-1px);
+  box-shadow: 0 0 16px oklch(1 0 0 / 25%), 0 4px 12px oklch(0 0 0 / 35%);
+  transform: translateY(-1px) scale(1.02);
+}
+.studio-key.is-primary:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 25%);
 }
 .studio-key:disabled {
   opacity: 0.38;
@@ -287,10 +291,14 @@
   border-radius: 4px;
   border: 1px solid oklch(1 0 0 / 14%);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
-  transition: opacity 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
 }
 .brand-logo:hover {
-  border-color: oklch(1 0 0 / 30%);
+  transform: scale(1.06);
+  border-color: oklch(1 0 0 / 35%);
+  box-shadow: 0 4px 14px oklch(0 0 0 / 50%);
 }
 .brand-text {
   display: flex;
@@ -726,10 +734,12 @@ progress::-webkit-progress-bar {
 progress::-webkit-progress-value {
   background: var(--primary);
   border-radius: 3px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 progress::-moz-progress-bar {
   background: var(--primary);
   border-radius: 3px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .overall-progress progress {
   height: 10px;
@@ -796,6 +806,8 @@ progress::-moz-progress-bar {
   gap: 16px;
   line-height: 1.55;
   font-size: 11px;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 .feedback.error {
   border-left-color: var(--destructive);
@@ -1009,10 +1021,14 @@ progress::-moz-progress-bar {
   padding: 14px;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
 }
 .channel-strip:hover {
-  border-color: oklch(1 0 0 / 22%);
+  border-color: oklch(1 0 0 / 25%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px oklch(0 0 0 / 25%);
 }
 .channel-strip.channel-muted {
   opacity: 0.55;
@@ -1106,10 +1122,11 @@ progress::-moz-progress-bar {
   background: linear-gradient(var(--key) 0 48%, var(--lit) 48% 52%, var(--key) 52%);
   margin-left: -22px;
   box-shadow: var(--key-shadow);
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .fader-track input:hover::-webkit-slider-thumb {
   border-color: var(--lit);
+  box-shadow: 0 0 8px oklch(1 0 0 / 25%);
 }
 .fader-track input::-moz-range-track {
   background: var(--rail);
@@ -1142,10 +1159,14 @@ progress::-moz-progress-bar {
   background: var(--key);
   border: 1px solid var(--key-border);
   border-radius: 50%;
-  transition: border-color 0.15s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.18s ease,
+              box-shadow 0.18s ease;
 }
 .pan-knob:hover {
   border-color: var(--lit);
+  transform: scale(1.06);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 30%);
 }
 .pan-knob input {
   opacity: 0;
@@ -1986,11 +2007,35 @@ progress::-moz-progress-bar {
   font-size: 11px;
 }
 
+/* === SCROLL REVEAL ENTRANCE === */
+[data-reveal] {
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+[data-reveal].reveal-pending {
+  opacity: 0;
+  transform: translateY(14px);
+}
+[data-reveal].reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .spin {
-    animation: none;
-  }
-  * {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  [data-reveal].reveal-pending {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .spin {
+    animation: none !important;
   }
 }

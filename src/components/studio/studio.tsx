@@ -27,6 +27,7 @@ import {
 import { InstrumentIcon, Key, Waveform } from "./controls";
 import { InstrumentRefineModal } from "./instrument-refine-modal";
 import { HfTokenModal } from "./hf-token-modal";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import {
   STEMS,
   StudioEngine,
@@ -148,6 +149,8 @@ export function Studio() {
   const [telemetrySteps, setTelemetrySteps] = useState<TelemetryStep[]>(initialTelemetrySteps);
   const [refiningChannelIndex, setRefiningChannelIndex] = useState<number | null>(null);
   const [showHfTokenModal, setShowHfTokenModal] = useState(false);
+
+  useScrollReveal([screen, status, polyphonicMode, session?.id]);
 
   function getEngine() {
     if (!engine.current) engine.current = new StudioEngine();
@@ -1145,7 +1148,7 @@ export function Studio() {
           </div>
 
           {status === "empty" ? (
-            <section className="empty-monitor">
+            <section className="empty-monitor" data-reveal>
               <div className="empty-label">
                 <span className="tiny-led" /> Sessão de Demonstração
               </div>
@@ -1171,7 +1174,7 @@ export function Studio() {
               </div>
             </section>
           ) : (
-            <section className="separation-monitor">
+            <section className="separation-monitor" data-reveal>
               <div className="monitor-title">
                 <h2>{session?.name ?? "Lendo arquivo de áudio..."}</h2>
                 <span className="muted">{session?.size}</span>
@@ -1236,7 +1239,7 @@ export function Studio() {
               </div>
 
               {/* Advanced Telemetry Pipeline */}
-              <div className="telemetry-timeline">
+              <div className="telemetry-timeline" data-reveal>
                 <div className="telemetry-timeline-title">
                   <span>TELEMETRIA DE ANÁLISE IA & DIARIZAÇÃO</span>
                   <span className="tiny-led led-green" />
@@ -1355,7 +1358,7 @@ export function Studio() {
                 <img
                   src="/logo.jpeg"
                   alt="PlayAlong Studio Logo"
-                  className="w-8 h-8 rounded object-cover border border-white/10 shrink-0 cursor-pointer hover:border-white/30 transition-colors"
+                  className="w-8 h-8 rounded object-cover border border-white/10 shrink-0 cursor-pointer transition-transform duration-200 ease-out hover:scale-105 hover:border-white/30"
                   onClick={() => setScreen("upload")}
                   title="Voltar ao início / Trocar áudio"
                 />
@@ -1478,7 +1481,7 @@ export function Studio() {
 
           {/* Polyphonic Vocals Expansion Banner */}
           {vocalStems && (
-            <div className="vocal-polyphonic-banner">
+            <div className="vocal-polyphonic-banner" data-reveal>
               <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-pink-400 shrink-0" />
                 <span>
@@ -1501,7 +1504,7 @@ export function Studio() {
             </div>
           )}
 
-          <section className="practice-strip">
+          <section className="practice-strip" data-reveal>
             <span>Instrumento em Prática:</span>
             <div className="practice-instruments">
               {displayTracks.map((t, i) => (
@@ -1530,7 +1533,7 @@ export function Studio() {
             </div>
           </section>
 
-          <section className="channel-grid dynamic-grid">
+          <section className="channel-grid dynamic-grid" data-reveal>
             {displayTracks.map((track, i) => {
               const c = channels[i];
               if (!c) return null;
@@ -1680,7 +1683,7 @@ export function Studio() {
             })}
           </section>
 
-          <section className="study-tools">
+          <section className="study-tools" data-reveal>
             <label>
               Velocidade{" "}
               <input
