@@ -15,6 +15,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ErrorBoundary } from "../components/error-boundary";
 import { Toaster } from "../components/ui/sonner";
+import { registerPwaServiceWorker } from "../lib/pwa-register";
+import { PwaInstallBanner } from "../components/pwa-install-banner";
 
 export function NotFoundComponent() {
   return (
@@ -94,6 +96,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "PlayAlong Studio" },
       { name: "description", content: "Estúdio de ensaio e mixagem multitrack para músicos." },
       { name: "author", content: "Lovable" },
+      { name: "theme-color", content: "#0e0e11" },
+      { name: "application-name", content: "PlayAlong Studio" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "PlayAlong" },
       { property: "og:title", content: "PlayAlong Studio" },
       { property: "og:description", content: "Seu console de ensaio multitrack." },
       { property: "og:type", content: "website" },
@@ -112,6 +119,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -137,12 +146,17 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    registerPwaServiceWorker();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </ErrorBoundary>
+      <PwaInstallBanner />
       <Toaster position="bottom-right" richColors theme="dark" />
     </QueryClientProvider>
   );

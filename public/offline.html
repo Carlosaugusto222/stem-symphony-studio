@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Você está desconectado — PlayAlong Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0e0e11" />
+    <link rel="icon" href="/favicon.ico" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: #0e0e11;
+        color: #f4f4f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+      }
+      .offline-card {
+        max-width: 440px;
+        width: 100%;
+        background-color: #16161a;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+      }
+      .icon-container {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.25rem;
+        color: #10b981;
+      }
+      h1 {
+        font-family: monospace;
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        color: #ffffff;
+      }
+      p {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: #a1a1aa;
+        margin-bottom: 1.5rem;
+      }
+      .offline-note {
+        font-size: 0.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid #27272a;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1.5rem;
+        text-align: left;
+        color: #71717a;
+        line-height: 1.5;
+      }
+      .offline-note strong {
+        color: #10b981;
+      }
+      .actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      button, a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.25rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+      }
+      .btn-primary {
+        background-color: #f4f4f5;
+        color: #09090b;
+        border: 1px solid #f4f4f5;
+      }
+      .btn-primary:hover {
+        background-color: #ffffff;
+        box-shadow: 0 0 14px rgba(255, 255, 255, 0.25);
+      }
+      .btn-secondary {
+        background-color: #27272a;
+        color: #f4f4f5;
+        border: 1px solid #3f3f46;
+      }
+      .btn-secondary:hover {
+        background-color: #3f3f46;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="offline-card">
+      <div class="icon-container">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+          <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+          <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+          <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+      </div>
+      <h1>Sem conexão à internet</h1>
+      <p>O PlayAlong Studio requer conectividade para separar stems com IA (Demucs v4) ou carregar novas músicas por link.</p>
+      <div class="offline-note">
+        <strong>Dica:</strong> Se você já tem uma música carregada no mixer, a reprodução e os faders de ensaio continuam funcionando diretamente na memória do seu navegador!
+      </div>
+      <div class="actions">
+        <button class="btn-primary" onclick="window.location.reload()">Tentar reconectar</button>
+        <a class="btn-secondary" href="/">Voltar ao Início</a>
+      </div>
+    </div>
+  </body>
+</html>
