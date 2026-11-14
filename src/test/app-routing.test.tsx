@@ -14,4 +14,12 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
+
+  it("falls back to root route not found for unknown paths", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/rota-desconhecida-404");
+
+    expect(matches.at(-1)?.routeId).toBe(rootRouteId);
+  });
 });

@@ -9,25 +9,31 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { FileQuestion, AlertTriangle, RotateCcw, Home } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ErrorBoundary } from "../components/error-boundary";
+import { Toaster } from "../components/ui/sonner";
 
-function NotFoundComponent() {
+export function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground font-mono">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-[50ch] mx-auto">
-          A página que você está procurando não existe ou foi movida.
+      <div className="max-w-md text-center p-8 rounded-xl border border-border bg-card shadow-2xl">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <FileQuestion className="h-8 w-8" />
+        </div>
+        <h1 className="text-5xl font-bold text-foreground font-mono">404</h1>
+        <h2 className="mt-3 text-lg font-semibold text-foreground">Página não encontrada</h2>
+        <p className="mt-2 text-xs text-muted-foreground leading-relaxed max-w-[42ch] mx-auto">
+          O endereço acessado não existe, foi movido ou o link expirou. Volte ao console para continuar seus ensaios multitrack.
         </p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-xs font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Voltar ao Início
+            <Home className="h-3.5 w-3.5" /> Voltar ao Início
           </Link>
         </div>
       </div>
@@ -36,7 +42,8 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
-  console.error(error);
+  // Registra o detalhe técnico no console para diagnóstico sem expor stack trace cru ao usuário
+  console.error("[TanStack Root Route Error]", error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -44,12 +51,15 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+      <div className="max-w-md text-center p-8 rounded-xl border border-destructive/30 bg-card shadow-2xl">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+          <AlertTriangle className="h-7 w-7" />
+        </div>
+        <h1 className="text-lg font-semibold tracking-tight text-foreground font-mono">
           Não foi possível carregar a página
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-[50ch] mx-auto">
-          Ocorreu um imprevisto ao carregar o aplicativo. Você pode tentar novamente ou voltar à página inicial.
+        <p className="mt-2 text-xs text-muted-foreground leading-relaxed max-w-[45ch] mx-auto">
+          Ocorreu uma instabilidade ao inicializar esta rota. Seus dados e áudios locais permanecem preservados.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
@@ -57,15 +67,15 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
           >
-            Tentar Novamente
+            <RotateCcw className="h-3.5 w-3.5" /> Tentar de novo
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-card px-4 py-2 text-sm font-medium text-foreground transition-all duration-200 hover:bg-glass hover:text-lit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3.5 py-2 text-xs font-medium text-foreground transition-all duration-200 hover:bg-glass hover:text-lit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Voltar ao Início
+            <Home className="h-3.5 w-3.5" /> Voltar ao Início
           </a>
         </div>
       </div>
@@ -129,8 +139,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <ErrorBoundary>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </ErrorBoundary>
+      <Toaster position="bottom-right" richColors theme="dark" />
     </QueryClientProvider>
   );
 }

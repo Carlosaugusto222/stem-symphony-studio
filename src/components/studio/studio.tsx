@@ -21,9 +21,13 @@ import {
   Sparkles,
   Square,
   KeyRound,
+  Upload,
+  VolumeX,
   X,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { InstrumentIcon, Key, Waveform } from "./controls";
 import { InstrumentRefineModal } from "./instrument-refine-modal";
 import { HfTokenModal } from "./hf-token-modal";
@@ -149,6 +153,7 @@ export function Studio() {
   const [telemetrySteps, setTelemetrySteps] = useState<TelemetryStep[]>(initialTelemetrySteps);
   const [refiningChannelIndex, setRefiningChannelIndex] = useState<number | null>(null);
   const [showHfTokenModal, setShowHfTokenModal] = useState(false);
+  const [lastFailedAction, setLastFailedAction] = useState<(() => void) | null>(null);
 
   useScrollReveal([screen, status, polyphonicMode, session?.id]);
 
@@ -285,6 +290,7 @@ export function Studio() {
       };
     });
     setNotice(`Canal CH 0${channelIndex + 1} refinado com precisão para "${refined.name}"`);
+    toast.success(`Canal CH 0${channelIndex + 1} refinado para "${refined.name}"`);
   }
   async function runTelemetryAnalysis(buffers: AudioBuffer[], originalBuffer?: AudioBuffer) {
     setTelemetrySteps([
@@ -413,6 +419,7 @@ export function Studio() {
     try {
       setError("");
       setNotice("");
+      setLastFailedAction(null);
       setShowFallbackPrompt(false);
       const existing = sessions.find((s) => s.kind === "demo");
       let s = existing;
@@ -428,8 +435,12 @@ export function Studio() {
         setVocalStems(stems);
       }
       loadSession(s);
-    } catch {
-      setError("Não foi possível iniciar o áudio neste navegador.");
+      toast.success("Sessão de demonstração pronta!");
+    } catch (err) {
+      console.error("[Studio Demo Error]", err);
+      setLastFailedAction(() => () => void demo());
+      setError("Não foi possível iniciar o áudio de demonstração neste navegador. Verifique as permissões de som.");
+      toast.error("Não foi possível carregar a demonstração.");
     }
   }
 
@@ -439,6 +450,7 @@ export function Studio() {
       resetTransport();
       setError("");
       setNotice("");
+      setLastFailedAction(null);
       setShowFallbackPrompt(false);
       setStatus("decoding");
       setProgress([0, 0, 0, 0, 0]);
@@ -455,35 +467,43 @@ export function Studio() {
       };
       setSession(s);
       setStatus("preview");
+      toast.success("Áudio carregado! Prévia pronta para processamento.");
     } catch (err) {
-      setError(
+      console.error("[Studio Ingest Error]", err);
+      setStatus("empty");
+      setLastFailedAction(() => () => void ingest(file));
+      const msg =
         err instanceof Error && !err.message.includes("decode")
           ? err.message
-          : "Não foi possível ler este áudio. Tente um arquivo WAV ou MP3 válido.",
-      );
-      setStatus("empty");
+          : "Não foi possível ler este áudio. Tente um arquivo WAV ou MP3 válido.";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      if (fileInput.current) fileInput.current.value = "";
     }
-    if (fileInput.current) fileInput.current.value = "";
   }
 
   async function loadUrl() {
     const valid = audioUrlSchema.safeParse(url);
     if (!valid.success) {
-      setError("Cole um link HTTPS direto para um arquivo de áudio.");
+      const msg = "Cole um link HTTPS direto para um arquivo de áudio.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (/youtube\.com|youtu\.be/i.test(new URL(valid.data).hostname)) {
-      setError(
-        "YouTube não fornece áudio direto. Envie um arquivo ou um link de nuvem com download direto.",
-      );
+      const msg = "YouTube não fornece áudio direto. Envie um arquivo ou um link de nuvem com download direto.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     try {
       setError("");
+      setLastFailedAction(null);
       setShowFallbackPrompt(false);
       setStatus("decoding");
       const response = await fetch(valid.data, { signal: AbortSignal.timeout(30000) });
-      if (!response.ok) throw new Error();
+      if (!response.ok) throw new Error("Falha ao baixar áudio pelo link.");
       const length = Number(response.headers.get("content-length") ?? 0);
       if (length > 120 * 1024 * 1024) throw new Error("O arquivo excede o limite de 120MB.");
       const blob = await response.blob();
@@ -495,13 +515,17 @@ export function Studio() {
           type: blob.type,
         }),
       );
+      toast.success("Áudio obtido pelo link com sucesso!");
     } catch (err) {
+      console.error("[Studio LoadUrl Error]", err);
       setStatus("empty");
-      setError(
+      setLastFailedAction(() => () => void loadUrl());
+      const msg =
         err instanceof Error && err.message.includes("120MB")
           ? err.message
-          : "Não foi possível acessar o link. Verifique se ele permite download direto e acesso pelo navegador.",
-      );
+          : "Não foi possível acessar o link. Verifique se ele permite download direto e acesso pelo navegador.";
+      setError(msg);
+      toast.error(msg);
     }
   }
 
@@ -566,21 +590,32 @@ export function Studio() {
       setSessions((ss) => [...ss.filter((x) => x.name !== s.name), s]);
       setStatus("ready");
       setNotice("Faixas isoladas por Inteligência Artificial Demucs v4 com sucesso!");
+      toast.success("Separação de faixas concluída via Demucs v4!");
       setAiHealth("online");
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         setStatus("preview");
         setNotice("Processamento cancelado pelo usuário.");
+        toast.info("Processamento cancelado.");
         return;
       }
+      console.error("[Studio ExtractAI Error]", err);
       setStatus("preview");
       setAiHealth("local");
       setShowFallbackPrompt(true);
-      setError(
-        err instanceof Error && err.message
-          ? `${err.message} Deseja usar a prévia local instantânea ou configurar seu Token HF?`
-          : "O serviço de IA está ocupado ou indisponível no momento. Deseja usar a prévia local instantânea?",
-      );
+      setLastFailedAction(() => () => void extractAI());
+      let friendlyMsg = "O serviço de IA está ocupado ou indisponível no momento. Deseja tentar de novo ou gerar a prévia rápida local?";
+      if (err instanceof Error) {
+        if (err.message.includes("Token Hugging Face") || err.message.includes("espaço de IA") || err.message.includes("Formato de áudio")) {
+          friendlyMsg = err.message;
+        } else if (err.message.includes("Failed to fetch") || err.name === "TypeError") {
+          friendlyMsg = "Falha de comunicação com os servidores de IA. Verifique sua conexão e tente de novo.";
+        } else if (err.message) {
+          friendlyMsg = `${err.message} Deseja tentar de novo ou gerar a prévia rápida local?`;
+        }
+      }
+      setError(friendlyMsg);
+      toast.error("Não foi possível concluir o isolamento com IA.");
     }
   }
 
@@ -631,10 +666,14 @@ export function Studio() {
       setSessions((ss) => [...ss.filter((x) => x.name !== s.name), s]);
       setStatus("ready");
       setNotice("Prévia local rápida preparada.");
+      toast.success("Prévia local pronta para ensaio!");
     } catch (err) {
+      console.error("[Studio ExtractLocal Error]", err);
       setStatus("preview");
       if (err instanceof Error && err.name !== "AbortError") {
-        setError("A preparação falhou. Tente novamente com um áudio menor.");
+        setLastFailedAction(() => () => void extractLocal());
+        setError("A preparação das faixas locais falhou. Tente novamente com um arquivo menor.");
+        toast.error("Falha ao preparar faixas locais.");
       }
     }
   }
@@ -680,8 +719,11 @@ export function Studio() {
         await e.play(channels);
         setPlaying(true);
       }
-    } catch {
-      setError("Não foi possível reproduzir. Tente novamente.");
+    } catch (err) {
+      console.error("[Studio Playback Error]", err);
+      setLastFailedAction(() => () => void togglePlay());
+      setError("Não foi possível reproduzir o áudio. Tente novamente.");
+      toast.error("Erro na reprodução de áudio.");
     }
   }
 
@@ -780,7 +822,9 @@ export function Studio() {
     const blob = wavBlob(buf);
     const filename = `${session?.name.replace(/\.[^/.]+$/, "") || "playalong"}-${(trk?.name || `faixa-${i + 1}`).toLowerCase().replace(/[^a-z0-9]+/g, "-")}.wav`;
     download(blob, filename);
-    setNotice(`Faixa "${trk?.name || `CH 0${i + 1}`}" exportada em WAV 48kHz Lossless.`);
+    const stemName = trk?.name || `CH 0${i + 1}`;
+    setNotice(`Faixa "${stemName}" exportada em WAV 48kHz Lossless.`);
+    toast.success(`Faixa "${stemName}" exportada em WAV!`);
   }
 
   async function exportAudio(format: "wav" | "mp3" = "wav") {
@@ -794,13 +838,14 @@ export function Studio() {
           : session.buffers;
       const blob = await exportMix(targetBuffers, channels, speed / 100, format);
       download(blob, `playalong-${polyphonicMode ? "polifonico" : "customizado"}.${format}`);
-      setNotice(
-        format === "wav"
-          ? "Play-along exportado em WAV estéreo (48kHz Lossless)."
-          : "Play-along exportado em MP3 estéreo (320kbps).",
-      );
-    } catch {
-      setError("Não foi possível exportar o áudio.");
+      const formatLabel = format === "wav" ? "WAV (48kHz Lossless)" : "MP3 (320kbps)";
+      setNotice(`Play-along exportado em ${formatLabel}.`);
+      toast.success(`Play-along exportado com sucesso em ${format.toUpperCase()}!`);
+    } catch (err) {
+      console.error("[Studio ExportAudio Error]", err);
+      setLastFailedAction(() => () => void exportAudio(format));
+      setError("Não foi possível exportar a mixagem. Tente novamente.");
+      toast.error("Falha ao exportar a mixagem.");
     } finally {
       setExporting(false);
     }
@@ -828,12 +873,16 @@ export function Studio() {
         );
         stream.getTracks().forEach((t) => t.stop());
         setNotice("Sua prática foi gravada e baixada.");
+        toast.success("Gravação concluída e baixada com sucesso!");
       };
       r.start();
       setRecording(true);
       setError("");
-    } catch {
-      setError("Permita o acesso ao microfone para gravar sua prática.");
+      toast.info("Gravação de ensaio iniciada. Cante ou toque junto!");
+    } catch (err) {
+      console.error("[Studio Record Error]", err);
+      setError("Permita o acesso ao microfone no navegador para gravar sua prática.");
+      toast.error("Permissão de microfone necessária para gravar.");
     }
   }
 
@@ -1183,7 +1232,7 @@ export function Studio() {
                 </span>
               </div>
 
-              {session?.original && (
+              {session?.original ? (
                 <div className="source-preview">
                   <Key
                     size="icon"
@@ -1197,7 +1246,13 @@ export function Studio() {
                   <Waveform buffer={session.original} />
                   <span>{timecode(session.original.duration)}</span>
                 </div>
-              )}
+              ) : status === "decoding" ? (
+                <div className="source-preview flex items-center gap-3">
+                  <Skeleton className="h-8 w-8 rounded shrink-0 bg-white/10" />
+                  <Skeleton className="h-10 flex-1 rounded bg-white/10" />
+                  <Skeleton className="h-4 w-12 rounded bg-white/10" />
+                </div>
+              ) : null}
 
               {processingMode === "ai" || session?.kind === "ai" ? (
                 <div className="processing-disclosure is-ai">
@@ -1276,6 +1331,19 @@ export function Studio() {
             <div className="feedback error" role="alert">
               <span>{error}</span>
               <div className="feedback-actions">
+                {lastFailedAction && (
+                  <Key
+                    onClick={() => {
+                      setError("");
+                      const retry = lastFailedAction;
+                      setLastFailedAction(null);
+                      retry();
+                    }}
+                    title="Tentar a operação novamente"
+                  >
+                    <RotateCcw size={13} className="mr-1" /> Tentar de novo
+                  </Key>
+                )}
                 <Key
                   onClick={() => setShowHfTokenModal(true)}
                   title="Configurar ou inserir seu Token de IA Hugging Face"
@@ -1321,18 +1389,28 @@ export function Studio() {
               <>
                 <Key
                   primary
-                  disabled={!selected.some(Boolean)}
+                  disabled={busy || !selected.some(Boolean)}
                   onClick={() => void extractAI()}
                   title="Separar faixas utilizando Demucs v4 na ZeroGPU (gratuito)"
                 >
-                  <Sparkles size={14} className="mr-1" /> Separar Faixas com IA (Grátis)
+                  {busy && processingMode === "ai" ? (
+                    <Loader2 className="spin mr-1" size={14} />
+                  ) : (
+                    <Sparkles size={14} className="mr-1" />
+                  )}
+                  Separar Faixas com IA (Grátis)
                 </Key>
                 <Key
-                  disabled={!selected.some(Boolean)}
+                  disabled={busy || !selected.some(Boolean)}
                   onClick={() => void extractLocal()}
                   title="Prévia rápida gerada localmente no navegador"
                 >
-                  <Zap size={14} className="mr-1" /> Gerar Prévia Rápida Local
+                  {busy && processingMode === "local" ? (
+                    <Loader2 className="spin mr-1" size={14} />
+                  ) : (
+                    <Zap size={14} className="mr-1" />
+                  )}
+                  Gerar Prévia Rápida Local
                 </Key>
               </>
             )}
@@ -1534,7 +1612,21 @@ export function Studio() {
           </section>
 
           <section className="channel-grid dynamic-grid" data-reveal>
-            {displayTracks.map((track, i) => {
+            {displayTracks.length === 0 ? (
+              <div className="col-span-full py-12 px-6 text-center border border-dashed border-white/10 rounded-lg bg-white/[0.02]">
+                <VolumeX className="w-8 h-8 mx-auto mb-2 text-zinc-500" />
+                <h3 className="text-sm font-semibold text-zinc-200">Nenhum canal de áudio disponível</h3>
+                <p className="text-xs text-zinc-400 mt-1 max-w-[45ch] mx-auto">
+                  Carregue um arquivo de áudio ou execute a demonstração para interagir com os canais do mixer.
+                </p>
+                <div className="mt-4">
+                  <Key primary onClick={() => setScreen("upload")}>
+                    Voltar ao Início
+                  </Key>
+                </div>
+              </div>
+            ) : (
+              displayTracks.map((track, i) => {
               const c = channels[i];
               if (!c) return null;
               const silent = gainFor(c, channels) === 0;
@@ -1680,7 +1772,7 @@ export function Studio() {
                   </div>
                 </article>
               );
-            })}
+            }))}
           </section>
 
           <section className="study-tools" data-reveal>
@@ -1748,9 +1840,24 @@ export function Studio() {
           {error && (
             <div className="feedback error" role="alert">
               <span>{error}</span>
-              <Key size="icon" aria-label="Fechar mensagem de erro" onClick={() => setError("")}>
-                <X />
-              </Key>
+              <div className="feedback-actions">
+                {lastFailedAction && (
+                  <Key
+                    onClick={() => {
+                      setError("");
+                      const retry = lastFailedAction;
+                      setLastFailedAction(null);
+                      retry();
+                    }}
+                    title="Tentar a operação novamente"
+                  >
+                    <RotateCcw size={13} className="mr-1" /> Tentar de novo
+                  </Key>
+                )}
+                <Key size="icon" aria-label="Fechar mensagem de erro" onClick={() => setError("")}>
+                  <X />
+                </Key>
+              </div>
             </div>
           )}
           {notice && (
@@ -1827,23 +1934,47 @@ export function Studio() {
                 <Play />
               </Key>
             </div>
-            {sessions
-              .filter((s) => s.kind !== "demo")
-              .map((s, i) => (
-                <div className="library-row" key={i}>
-                  <Mic />
-                  <div>
-                    <h3>{s.name}</h3>
-                    <span>
-                      {s.size} ·{" "}
-                      {s.kind === "ai" ? "DEMUCS v4 (IA ZERO-GPU)" : "PRÉVIA POR FREQUÊNCIAS"}
-                    </span>
-                  </div>
-                  <Key onClick={() => loadSession(s)} aria-label={`Abrir ${s.name}`}>
-                    <ArrowRight />
+            {sessions.filter((s) => s.kind !== "demo").length === 0 ? (
+              <div className="py-6 px-4 text-center border border-dashed border-white/10 rounded-lg my-3 bg-white/[0.02]">
+                <FolderOpen className="w-8 h-8 mx-auto mb-2 text-zinc-500" />
+                <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wide">
+                  Nenhuma faixa personalizada importada
+                </h4>
+                <p className="text-[11px] text-zinc-400 mt-1 max-w-[40ch] mx-auto leading-relaxed">
+                  Arraste arquivos de áudio para o estúdio ou cole um link para processar e isolar faixas nesta sessão.
+                </p>
+                <div className="mt-3">
+                  <Key
+                    size="sm"
+                    primary
+                    onClick={() => {
+                      setLibrary(false);
+                      fileInput.current?.click();
+                    }}
+                  >
+                    <Upload size={12} className="mr-1.5" /> Enviar Primeiro Áudio
                   </Key>
                 </div>
-              ))}
+              </div>
+            ) : (
+              sessions
+                .filter((s) => s.kind !== "demo")
+                .map((s, i) => (
+                  <div className="library-row" key={i}>
+                    <Mic />
+                    <div>
+                      <h3>{s.name}</h3>
+                      <span>
+                        {s.size} ·{" "}
+                        {s.kind === "ai" ? "DEMUCS v4 (IA ZERO-GPU)" : "PRÉVIA POR FREQUÊNCIAS"}
+                      </span>
+                    </div>
+                    <Key onClick={() => loadSession(s)} aria-label={`Abrir ${s.name}`}>
+                      <ArrowRight />
+                    </Key>
+                  </div>
+                ))
+            )}
             <p className="library-note">
               Os áudios enviados ficam nesta sessão do navegador. Lembre-se de exportar sua mixagem antes de fechar a janela.
             </p>

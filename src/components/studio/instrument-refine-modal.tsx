@@ -17,7 +17,7 @@ import {
   type InstrumentCategory,
   refineInstrument,
 } from "@/lib/audio/instrument-detector";
-import { Check, Sparkles, SlidersHorizontal, Search } from "lucide-react";
+import { Check, Sparkles, SlidersHorizontal, Search, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InstrumentRefineModalProps {
@@ -242,8 +242,27 @@ export function InstrumentRefineModal({
           })}
 
           {filteredInstruments.length === 0 && (
-            <div className="text-center py-8 text-zinc-500 text-xs">
-              Nenhum instrumento encontrado com o filtro "{searchQuery}".
+            <div className="py-8 px-4 text-center border border-dashed border-zinc-800 rounded-lg bg-zinc-950/40 my-2">
+              <SearchX className="w-7 h-7 mx-auto mb-2 text-zinc-500" />
+              <p className="text-xs font-medium text-zinc-300">
+                Nenhum instrumento encontrado para "{searchQuery}"
+              </p>
+              <p className="text-[11px] text-zinc-500 mt-1 max-w-[36ch] mx-auto">
+                Tente buscar por outro termo ou limpe os filtros para ver todas as categorias.
+              </p>
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs border-zinc-700 hover:bg-zinc-800 cursor-pointer"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
             </div>
           )}
         </div>

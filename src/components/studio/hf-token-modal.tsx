@@ -15,6 +15,7 @@ import {
   checkDemucsHealth,
 } from "@/lib/audio/demucs";
 import { Key, Check, AlertCircle, Loader2, Eye, EyeOff, Trash2, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 
 interface HfTokenModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ export function HfTokenModal({ open, onOpenChange, onSaved }: HfTokenModalProps)
   const handleTest = async () => {
     if (!token.trim()) {
       setTestResult({ success: false, message: "Insira um token antes de testar." });
+      toast.error("Insira um token Hugging Face antes de testar.");
       return;
     }
     setTesting(true);
@@ -49,17 +51,22 @@ export function HfTokenModal({ open, onOpenChange, onSaved }: HfTokenModalProps)
           success: true,
           message: "Conexão estabelecida com sucesso com o cluster Demucs v4 ZeroGPU!",
         });
+        toast.success("Conexão validada com sucesso com o cluster Demucs v4!");
       } else {
         setTestResult({
           success: false,
           message: "Não foi possível conectar ao cluster com este token. Verifique se o token é válido.",
         });
+        toast.error("Não foi possível conectar ao cluster com este token.");
       }
     } catch (err) {
+      console.error("[HF Token Test Error]", err);
+      const msg = err instanceof Error ? err.message : "Erro desconhecido ao testar conexão.";
       setTestResult({
         success: false,
-        message: err instanceof Error ? err.message : "Erro desconhecido ao testar conexão.",
+        message: msg,
       });
+      toast.error("Falha ao testar conexão com a IA.");
     } finally {
       setTesting(false);
     }
@@ -72,6 +79,10 @@ export function HfTokenModal({ open, onOpenChange, onSaved }: HfTokenModalProps)
       const health = await checkDemucsHealth();
       onSaved?.(health);
       onOpenChange(false);
+      toast.success("Token de IA salvo com sucesso!");
+    } catch (err) {
+      console.error("[HF Token Save Error]", err);
+      toast.error("Erro ao salvar token de IA.");
     } finally {
       setTesting(false);
     }
@@ -84,6 +95,7 @@ export function HfTokenModal({ open, onOpenChange, onSaved }: HfTokenModalProps)
     const health = await checkDemucsHealth("");
     onSaved?.(health);
     onOpenChange(false);
+    toast.info("Token de IA removido.");
   };
 
   return (
