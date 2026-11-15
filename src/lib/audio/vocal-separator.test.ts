@@ -46,4 +46,26 @@ describe("Polyphonic Vocal Separator", () => {
     expect(harmEnergy).toBeGreaterThan(0);
     expect(backEnergy).toBeGreaterThan(0);
   });
+
+  it("handles mono vocal buffers and produces 3 distinct voices", async () => {
+    const sampleRate = 44100;
+    const duration = 1.5;
+    const ctx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+    const buffer = ctx.createBuffer(1, sampleRate * duration, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < data.length; i++) {
+      const t = i / sampleRate;
+      data[i] = 0.3 * Math.sin(2 * Math.PI * 330 * t) + 0.15 * Math.sin(2 * Math.PI * 1800 * t);
+    }
+
+    const stems = await separatePolyphonicVocals(buffer);
+
+    expect(stems.lead).toBeDefined();
+    expect(stems.harmony).toBeDefined();
+    expect(stems.backing).toBeDefined();
+    expect(stems.lead.numberOfChannels).toBe(1);
+    expect(stems.harmony.numberOfChannels).toBe(1);
+    expect(stems.backing.numberOfChannels).toBe(1);
+  });
 });

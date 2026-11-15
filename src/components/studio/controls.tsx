@@ -124,7 +124,6 @@ export function InstrumentIcon({ icon, className }: { icon: string; className?: 
         </svg>
       );
     case "drums":
-    case "percussion":
       return (
         <svg
           className={c}
@@ -138,6 +137,50 @@ export function InstrumentIcon({ icon, className }: { icon: string; className?: 
           <ellipse cx="12" cy="8" rx="9" ry="4" />
           <path d="M3 8v8c0 2.21 4.03 4 9 4s9-1.79 9-4V8" />
           <path d="M12 12v8" />
+          <path d="m5 3 4 4" />
+          <path d="m19 3-4 4" />
+        </svg>
+      );
+    case "percussion":
+      return (
+        <svg
+          className={c}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="8" />
+          <circle cx="12" cy="12" r="4" strokeDasharray="2 2" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="M20 12h2" />
+          <path d="M2 12h2" />
+        </svg>
+      );
+    case "accordion":
+      return (
+        <svg
+          className={c}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="2" y="5" width="4" height="14" rx="1" />
+          <circle cx="4" cy="9" r="0.7" fill="currentColor" />
+          <circle cx="4" cy="12" r="0.7" fill="currentColor" />
+          <circle cx="4" cy="15" r="0.7" fill="currentColor" />
+          <path d="m6 6 3 2-3 2 3 2-3 2 3 2-3 2" />
+          <path d="m9 8 3-2 3 2-3 2 3 2-3 2 3 2" />
+          <rect x="18" y="5" width="4" height="14" rx="1" />
+          <line x1="18" y1="9" x2="22" y2="9" />
+          <line x1="18" y1="12" x2="22" y2="12" />
+          <line x1="18" y1="15" x2="22" y2="15" />
         </svg>
       );
     case "bass":

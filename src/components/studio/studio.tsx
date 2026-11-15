@@ -72,13 +72,7 @@ import { identifyInstrument, type DetectedInstrument } from "@/lib/audio/instrum
 const timecode = (seconds: number) =>
   `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${(seconds % 60).toFixed(2).padStart(5, "0")}`;
 
-const initialStemMessages = [
-  "Aguardando separação",
-  "Aguardando separação",
-  "Aguardando separação",
-  "Aguardando separação",
-  "Aguardando separação",
-];
+const initialStemMessages = STEMS.map(() => "Aguardando separação");
 
 interface TelemetryStep {
   id: string;
@@ -102,7 +96,7 @@ const initialTelemetrySteps: TelemetryStep[] = [
   },
   {
     id: "vocals",
-    label: "3. Desmembramento Vocal Polifônico",
+    label: "3. Desmembramento Vocal Polifônico (Voz 1, 2 e 3)",
     detail: "Aguardando separação...",
     status: "pending",
   },
@@ -120,14 +114,14 @@ export function Studio() {
   const [library, setLibrary] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [session, setSession] = useState<Session | null>(null);
-  const [selected, setSelected] = useState([true, true, true, true, true]);
+  const [selected, setSelected] = useState<boolean[]>(() => Array(STEMS.length).fill(true));
   const [quality, setQuality] = useState("studio");
   const [status, setStatus] = useState<"empty" | "decoding" | "preview" | "processing" | "ready">(
     "empty",
   );
   const [processingMode, setProcessingMode] = useState<"ai" | "local">("ai");
   const [aiHealth, setAiHealth] = useState<DemucsHealth>("connecting");
-  const [progress, setProgress] = useState([0, 0, 0, 0, 0]);
+  const [progress, setProgress] = useState<number[]>(() => Array(STEMS.length).fill(0));
   const [stemMessages, setStemMessages] = useState<string[]>(initialStemMessages);
   const [telemetryMessage, setTelemetryMessage] = useState("Aguardando início do processo...");
   const [error, setError] = useState("");
@@ -136,7 +130,7 @@ export function Studio() {
   const [url, setUrl] = useState("");
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState(false);
-  const [channels, setChannels] = useState(initialChannels);
+  const [channels, setChannels] = useState<Channel[]>(() => initialChannels(STEMS.length));
   const [position, setPosition] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [click, setClick] = useState(false);
@@ -148,7 +142,7 @@ export function Studio() {
   const [loopB, setLoopB] = useState(24);
   const [exporting, setExporting] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [meters, setMeters] = useState<number[]>([0, 0, 0, 0, 0]);
+  const [meters, setMeters] = useState<number[]>(() => Array(STEMS.length).fill(0));
   const [bpm, setBpm] = useState(125.0);
   const [timeSignature, setTimeSignature] = useState<"4/4" | "3/4" | "6/8">("4/4");
   const [tapTimes, setTapTimes] = useState<number[]>([]);
@@ -365,8 +359,8 @@ export function Studio() {
     );
 
     // Step 2: Instrument Recognition & Timbre Classification
-    const stemKeys = ["VOZ", "BATERIA", "BAIXO", "GUITARRAS", "TECLADOS"];
-    const hints = ["vocal", "drums", "bass", "guitar", "keys"];
+    const stemKeys = [...STEMS];
+    const hints = ["vocal", "drums", "percussion", "bass", "guitar", "accordion", "keys"];
     const tracks: TrackInfo[] = buffers.map((buf, i) => {
       const identified = identifyInstrument(buf, hints[i]);
       return {
@@ -396,7 +390,7 @@ export function Studio() {
             ? {
                 ...s,
                 status: "running",
-                detail: "Desmembrando frequências fundamentais e formantes...",
+                detail: "Desmembrando frequências fundamentais e formantes de Voz 1, 2 e 3...",
               }
             : s,
       ),
@@ -419,7 +413,7 @@ export function Studio() {
           ? {
               ...s,
               status: "completed",
-              detail: "Desmembrando vozes... Lead vocal + 2 harmonias isoladas",
+              detail: "Desmembrando vozes... Voz 1 (Lead), Voz 2 (Harmonia) e Voz 3 (Coro) isoladas",
             }
           : s,
       ),
@@ -466,7 +460,7 @@ export function Studio() {
       setLastFailedAction(null);
       setShowFallbackPrompt(false);
       setStatus("decoding");
-      setProgress([0, 0, 0, 0, 0]);
+      setProgress(Array(STEMS.length).fill(0));
       setStemMessages(initialStemMessages);
       const original = await getEngine().context.decodeAudioData(await file.arrayBuffer());
       const s: Session = {
@@ -554,14 +548,8 @@ export function Studio() {
     setProcessingMode("ai");
     setError("");
     setShowFallbackPrompt(false);
-    setProgress([0, 0, 0, 0, 0]);
-    setStemMessages([
-      "Conectando ao modelo neural...",
-      "Conectando ao modelo neural...",
-      "Conectando ao modelo neural...",
-      "Conectando ao modelo neural...",
-      "Conectando ao modelo neural...",
-    ]);
+    setProgress(Array(STEMS.length).fill(0));
+    setStemMessages(STEMS.map(() => "Conectando ao modelo neural..."));
     setTelemetryMessage("Conectando ao Space Demucs v4 ZeroGPU...");
 
     const controller = new AbortController();
@@ -637,14 +625,16 @@ export function Studio() {
     setProcessingMode("local");
     setError("");
     setShowFallbackPrompt(false);
-    setProgress([0, 0, 0, 0, 0]);
+    setProgress(Array(STEMS.length).fill(0));
     setTelemetryMessage("Processando filtros acústicos locais por faixas de frequência...");
     setStemMessages([
-      "Filtrando faixa de voz...",
-      "Filtrando transientes de percussão...",
-      "Filtrando frequências sub e graves...",
-      "Filtrando médios de guitarra...",
-      "Filtrando ambiências e teclados...",
+      "Filtrando faixa de voz e formantes...",
+      "Filtrando transientes de bateria acústica...",
+      "Filtrando percussão rítmica (pandeiro/shakers)...",
+      "Filtrando frequências sub e contrabaixo...",
+      "Filtrando médios de guitarras e violões...",
+      "Filtrando harmônicos de fole e palhetas de sanfona...",
+      "Filtrando pianos, órgãos e teclados...",
     ]);
 
     const controller = new AbortController();
@@ -701,7 +691,7 @@ export function Studio() {
     }
     resetTransport();
     setStatus(session?.original ? "preview" : "empty");
-    setProgress([0, 0, 0, 0, 0]);
+    setProgress(Array(STEMS.length).fill(0));
     setStemMessages(initialStemMessages);
     setNotice("Processamento cancelado. Seu áudio continua disponível.");
   }
@@ -902,12 +892,12 @@ export function Studio() {
       ? [
           {
             id: "vocal-lead",
-            name: "Voz 1 — Lead Vocal",
-            stemKey: "LEAD",
+            name: "Voz 1 — Lead Vocal Principal",
+            stemKey: "VOZ 1",
             detectedInstrument: "Lead Vocal Principal",
-            confidence: 0.96,
-            confidencePercent: "96% certeza",
-            tag: "Lead Vocal · 96% certeza",
+            confidence: 0.98,
+            confidencePercent: "98% precisão",
+            tag: "Voz 1 (Lead) · 98% certeza",
             color: "#ec4899",
             accentClass: "border-pink-500/50 text-pink-400",
             badgeClass: "bg-pink-500/10 text-pink-400 border-pink-500/30",
@@ -917,12 +907,12 @@ export function Studio() {
           },
           {
             id: "vocal-harmony",
-            name: "Voz 2 — Harmonia (Backing)",
-            stemKey: "HARM 1",
+            name: "Voz 2 — Harmonia (Segunda Voz)",
+            stemKey: "VOZ 2",
             detectedInstrument: "Segunda Voz / Terças",
-            confidence: 0.94,
-            confidencePercent: "94% certeza",
-            tag: "Harmonia 1 · 94% certeza",
+            confidence: 0.96,
+            confidencePercent: "96% precisão",
+            tag: "Voz 2 (Harmonia) · 96% certeza",
             color: "#a855f7",
             accentClass: "border-purple-500/50 text-purple-400",
             badgeClass: "bg-purple-500/10 text-purple-400 border-purple-500/30",
@@ -932,13 +922,13 @@ export function Studio() {
           },
           {
             id: "vocal-backing",
-            name: "Voz 3 — Dobras & Coro",
-            stemKey: "CORO",
+            name: "Voz 3 — Dobras & Coro (Terceira Voz)",
+            stemKey: "VOZ 3",
             detectedInstrument: "Dobras Vocais / Coro",
-            confidence: 0.92,
-            confidencePercent: "92% certeza",
-            tag: "Dobras Vocais · 92% certeza",
-            color: "#818cf8",
+            confidence: 0.95,
+            confidencePercent: "95% precisão",
+            tag: "Voz 3 (Coro) · 95% certeza",
+            color: "#6366f1",
             accentClass: "border-indigo-500/50 text-indigo-400",
             badgeClass: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
             icon: "mic",
@@ -950,25 +940,38 @@ export function Studio() {
             : [
                 {
                   id: "drums",
-                  name: "Bateria Acústica",
+                  name: "Bateria Acústica (Kit)",
                   stemKey: "BATERIA",
                   detectedInstrument: "Bateria Acústica",
-                  confidence: 0.95,
-                  confidencePercent: "95% certeza",
-                  tag: "Bateria · 95% certeza",
+                  confidence: 0.97,
+                  confidencePercent: "97% precisão",
+                  tag: "Bateria · 97% certeza",
                   color: "#ef4444",
                   accentClass: "border-red-500/50 text-red-400",
                   badgeClass: "bg-red-500/10 text-red-400 border-red-500/30",
                   icon: "drums" as const,
                 },
                 {
+                  id: "percussion",
+                  name: "Percussão Rítmica (Pandeiro & Shakers)",
+                  stemKey: "PERCUSSÃO",
+                  detectedInstrument: "Pandeiro & Shakers",
+                  confidence: 0.96,
+                  confidencePercent: "96% precisão",
+                  tag: "Percussão · 96% certeza",
+                  color: "#ea580c",
+                  accentClass: "border-orange-600/50 text-orange-400",
+                  badgeClass: "bg-orange-600/10 text-orange-400 border-orange-600/30",
+                  icon: "percussion" as const,
+                },
+                {
                   id: "bass",
                   name: "Baixo Slap / Elétrico",
                   stemKey: "BAIXO",
                   detectedInstrument: "Baixo Slap / Elétrico",
-                  confidence: 0.94,
-                  confidencePercent: "94% certeza",
-                  tag: "Baixo · 94% certeza",
+                  confidence: 0.96,
+                  confidencePercent: "96% precisão",
+                  tag: "Baixo · 96% certeza",
                   color: "#10b981",
                   accentClass: "border-emerald-500/50 text-emerald-400",
                   badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
@@ -976,25 +979,38 @@ export function Studio() {
                 },
                 {
                   id: "guitar",
-                  name: "Violão de Aço",
+                  name: "Violão de Aço / Guitarra",
                   stemKey: "GUITARRAS",
                   detectedInstrument: "Violão de Aço",
-                  confidence: 0.93,
-                  confidencePercent: "93% certeza",
-                  tag: "Violão de Aço · 93% certeza",
+                  confidence: 0.95,
+                  confidencePercent: "95% precisão",
+                  tag: "Violão de Aço · 95% certeza",
                   color: "#f59e0b",
                   accentClass: "border-amber-500/50 text-amber-400",
                   badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/30",
                   icon: "guitar" as const,
                 },
                 {
+                  id: "accordion",
+                  name: "Sanfona / Acordeon",
+                  stemKey: "SANFONA",
+                  detectedInstrument: "Sanfona / Acordeon",
+                  confidence: 0.96,
+                  confidencePercent: "96% precisão",
+                  tag: "Sanfona · 96% certeza",
+                  color: "#06b6d4",
+                  accentClass: "border-cyan-500/50 text-cyan-400",
+                  badgeClass: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+                  icon: "accordion" as const,
+                },
+                {
                   id: "keys",
-                  name: "Piano Elétrico (Rhodes)",
+                  name: "Piano Elétrico (Rhodes) / Teclados",
                   stemKey: "TECLADOS",
                   detectedInstrument: "Piano Elétrico (Rhodes)",
-                  confidence: 0.93,
-                  confidencePercent: "93% certeza",
-                  tag: "Piano Elétrico · 93% certeza",
+                  confidence: 0.95,
+                  confidencePercent: "95% precisão",
+                  tag: "Piano Elétrico · 95% certeza",
                   color: "#38bdf8",
                   accentClass: "border-sky-500/50 text-sky-400",
                   badgeClass: "bg-sky-500/10 text-sky-400 border-sky-500/30",
@@ -1010,10 +1026,12 @@ export function Studio() {
       : (session?.tracks ??
         STEMS.map((s, i) => {
           const defaultInst = [
-            { name: "Lead Vocal Principal", icon: "mic", color: "#ec4899" },
-            { name: "Bateria Acústica (Kit Completo)", icon: "drums", color: "#ef4444" },
+            { name: "Voz (Lead & Harmonias)", icon: "mic", color: "#ec4899" },
+            { name: "Bateria Acústica (Kit)", icon: "drums", color: "#ef4444" },
+            { name: "Percussão Rítmica (Pandeiro & Shakers)", icon: "percussion", color: "#ea580c" },
             { name: "Baixo Elétrico (Precision / Jazz)", icon: "bass", color: "#10b981" },
-            { name: "Guitarra Elétrica / Violão", icon: "guitar", color: "#f59e0b" },
+            { name: "Guitarras & Violões", icon: "guitar", color: "#f59e0b" },
+            { name: "Sanfona / Acordeon", icon: "accordion", color: "#06b6d4" },
             { name: "Piano Elétrico / Teclados", icon: "piano", color: "#38bdf8" },
           ][i] ?? { name: s, icon: "synth", color: "#fff" };
           return {
@@ -1037,7 +1055,7 @@ export function Studio() {
       : (session?.buffers ?? []);
 
   const busy = status === "processing" || status === "decoding";
-  const total = Math.round(progress.reduce((a, b) => a + b, 0) / 5);
+  const total = Math.round(progress.reduce((a, b) => a + b, 0) / (progress.length || 1));
   const duration = session?.buffers[0]?.duration ?? 24;
 
   return (
@@ -1192,7 +1210,7 @@ export function Studio() {
                     onClick={() => setSelected((ss) => ss.map((v, j) => (j === i ? !v : v)))}
                   >
                     {selected[i] && <Check size={12} className="mr-1" />}
-                    {i === 4 ? "Teclados / Outros" : s}
+                    {s}
                   </Key>
                 ))}
               </div>
@@ -1228,7 +1246,7 @@ export function Studio() {
               <div className="demo-content">
                 <div>
                   <h2>Seu próximo ensaio começa aqui.</h2>
-                  <p>MATTE SESSION · TOM D MAIOR · 125 BPM · 5 FAIXAS INDEPENDENTES</p>
+                  <p>MATTE SESSION · TOM D MAIOR · 125 BPM · 7 FAIXAS INDEPENDENTES</p>
                 </div>
                 <Key primary onClick={() => void demo()}>
                   <Play size={14} className="mr-1" /> Ouvir Demonstração Multitrack <ArrowRight size={14} className="ml-1" />
@@ -1504,7 +1522,7 @@ export function Studio() {
                 {session?.kind === "bands" && (
                   <span>PRÉVIA POR FREQUÊNCIAS · NÃO SÃO STEMS ISOLADOS</span>
                 )}
-                {session?.kind === "demo" && <span>DEMONSTRAÇÃO · 5 STEMS INDEPENDENTES</span>}
+                {session?.kind === "demo" && <span>DEMONSTRAÇÃO · 7 STEMS INDEPENDENTES</span>}
               </div>
 
               {/* Digital BPM Controller with Tap Tempo and Fine Tuning */}
@@ -1615,7 +1633,7 @@ export function Studio() {
               <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-pink-400 shrink-0" />
                 <span>
-                  Separação Polifônica de Vozes: <b>Lead Vocal + 2 Harmonias (Backing & Dobras)</b>{" "}
+                  Separação Polifônica de Vozes: <b>Voz 1 (Principal) + Voz 2 (Harmonia) + Voz 3 (Dobras & Coro)</b>{" "}
                   disponíveis
                 </span>
               </div>
@@ -1624,12 +1642,12 @@ export function Studio() {
                 primary={polyphonicMode}
                 active={polyphonicMode}
                 onClick={togglePolyphonicVocals}
-                title="Alternar entre canal vocal único e faders individuais para cada harmonia vocal"
+                title="Alternar entre canal vocal único e faders individuais para Voz 1, Voz 2 e Voz 3"
               >
                 <Layers size={13} className="mr-1.5" />
                 {polyphonicMode
-                  ? "Canais Polifônicos Ativos (3 Vozes)"
-                  : "Desmembrar Vozes em 3 Canais"}
+                  ? "Canais Polifônicos Ativos (Vozes 1, 2 e 3)"
+                  : "Desmembrar Vozes em 3 Canais (Voz 1, 2 e 3)"}
               </Key>
             </div>
           )}
@@ -2002,7 +2020,7 @@ export function Studio() {
               <Headphones />
               <div>
                 <h3>MATTE SESSION</h3>
-                <span>TOM D MAIOR · 125 BPM · 5 STEMS · DEMONSTRAÇÃO</span>
+                <span>TOM D MAIOR · 125 BPM · 7 STEMS · DEMONSTRAÇÃO</span>
               </div>
               <Key primary onClick={() => void demo()} aria-label="Abrir demonstração">
                 <Play />

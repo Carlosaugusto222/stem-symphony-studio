@@ -50,8 +50,10 @@ export function InstrumentRefineModal({
   const categories = useMemo(() => {
     return [
       { id: "all", label: "Todos os Instrumentos" },
-      { id: "vocais", label: CATEGORY_LABELS.vocais },
-      { id: "percussao", label: CATEGORY_LABELS.percussao },
+      { id: "vocais", label: "Vozes (Voz 1, 2, 3...)" },
+      { id: "bateria", label: "Bateria (Kits & Peças)" },
+      { id: "percussao", label: "Percussão (Pandeiro, Zabumba...)" },
+      { id: "sanfona", label: "Sanfona & Acordeon" },
       { id: "baixo", label: CATEGORY_LABELS.baixo },
       { id: "cordas", label: CATEGORY_LABELS.cordas },
       { id: "teclas", label: CATEGORY_LABELS.teclas },
@@ -61,7 +63,14 @@ export function InstrumentRefineModal({
 
   const filteredInstruments = useMemo(() => {
     return INSTRUMENT_TAXONOMY.filter((inst) => {
-      const matchesCategory = selectedCategory === "all" || inst.category === selectedCategory;
+      let matchesCategory = selectedCategory === "all" || inst.category === selectedCategory;
+      if (selectedCategory === "bateria") {
+        matchesCategory = inst.id.startsWith("drums") || inst.icon === "drums";
+      } else if (selectedCategory === "percussao") {
+        matchesCategory =
+          (inst.category === "percussao" && !inst.id.startsWith("drums")) ||
+          inst.icon === "percussion";
+      }
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -104,11 +113,12 @@ export function InstrumentRefineModal({
   const availableIcons: Array<DetectedInstrument["icon"]> = [
     "mic",
     "drums",
+    "percussion",
+    "accordion",
     "bass",
     "guitar",
     "piano",
     "synth",
-    "percussion",
     "horn",
   ];
 

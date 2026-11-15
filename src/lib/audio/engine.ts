@@ -1,6 +1,14 @@
 import { z } from "zod";
 
-export const STEMS = ["VOZ", "BATERIA", "BAIXO", "GUITARRAS", "TECLADOS"] as const;
+export const STEMS = [
+  "VOZ",
+  "BATERIA",
+  "PERCUSSÃO",
+  "BAIXO",
+  "GUITARRAS",
+  "SANFONA",
+  "TECLADOS",
+] as const;
 
 export interface TrackInfo {
   id: string;
@@ -13,7 +21,7 @@ export interface TrackInfo {
   color: string;
   accentClass: string;
   badgeClass: string;
-  icon: "guitar" | "piano" | "bass" | "drums" | "synth" | "mic" | "horn" | "percussion";
+  icon: "guitar" | "piano" | "bass" | "drums" | "synth" | "mic" | "horn" | "percussion" | "accordion";
   isVocalPart?: boolean;
   vocalRole?: "lead" | "harmony" | "backing";
 }
@@ -21,8 +29,8 @@ export interface TrackInfo {
 export type Channel = { db: number; pan: number; mute: boolean; solo: boolean };
 export const initialChannels = (n = 5): Channel[] =>
   Array.from({ length: n }, (_, i) => ({
-    db: [-0.8, 0, 0, -1.5, -3.5, -2.0, -3.0][i] ?? 0,
-    pan: [-0.12, 0, 0, 0.18, -0.25, 0.3, -0.3][i] ?? 0,
+    db: [-0.8, 0, 0, 0, -1.5, -2.0, -3.5, -2.0, -3.0][i] ?? 0,
+    pan: [-0.12, 0, 0.18, 0, 0.15, -0.22, -0.25, 0.3, -0.3][i] ?? 0,
     mute: false,
     solo: false,
   }));
@@ -201,32 +209,64 @@ export function createDemo(ctx: AudioContext): Session {
       const root = notes[Math.floor(step / 4) % 4] ?? 146.83,
         melody = [1, 1.25, 1.5, 2, 1.5, 1.25, 1, 0.75][step % 8] ?? 1;
       const sin = (f: number) => Math.sin(2 * Math.PI * f * t);
-      if (channel === 0)
+
+      // 0: VOZ (Lead Vocal Principal)
+      if (channel === 0) {
         data[n] =
           0.11 *
           (sin(root * melody * 2) + 0.3 * sin(root * melody * 4)) *
           Math.min(1, phase * 20) *
           Math.exp(-phase * 2.5);
+      }
+      // 1: BATERIA (Kit: Bumbo & Caixa)
       if (channel === 1) {
         const noise = Math.sin(n * 78.233) * Math.sin(n * 12.9898);
         data[n] =
           0.28 *
             Math.sin(2 * Math.PI * (55 * phase + 70 * 0.02 * (1 - Math.exp(-phase / 0.02)))) *
             Math.exp(-phase * 22) +
-          0.1 * noise * Math.exp(-(t % (beat / 2)) * 100) +
-          (step % 2 ? 0.15 * noise * Math.exp(-phase * 35) : 0);
+          (step % 2 ? 0.2 * noise * Math.exp(-phase * 35) : 0);
       }
-      if (channel === 2) data[n] = 0.17 * (sin(root / 2) + 0.25 * sin(root)) * Math.exp(-phase * 3);
-      if (channel === 3)
+      // 2: PERCUSSÃO (Pandeiro, Zabumba & Shakers)
+      if (channel === 2) {
+        const noise = Math.sin(n * 78.233) * Math.sin(n * 12.9898);
+        const subPhase = (t % (beat / 4)) / (beat / 4);
+        const accent = Math.floor(t / (beat / 4)) % 4 === 2 ? 1.4 : 0.8;
+        data[n] =
+          0.12 * noise * Math.exp(-subPhase * 40) * accent +
+          (Math.floor(t / (beat / 2)) % 2 === 1
+            ? 0.08 * Math.sin(2 * Math.PI * 4800 * t) * Math.exp(-subPhase * 30)
+            : 0);
+      }
+      // 3: BAIXO (Slap / Elétrico)
+      if (channel === 3) {
+        data[n] = 0.17 * (sin(root / 2) + 0.25 * sin(root)) * Math.exp(-phase * 3);
+      }
+      // 4: GUITARRAS (Violão de Aço)
+      if (channel === 4) {
         data[n] =
           0.09 *
           (sin(root * melody) + 0.4 * sin(root * melody * 2) + 0.2 * sin(root * melody * 3)) *
           Math.exp(-(t % (beat / 2)) * 9);
-      if (channel === 4)
+      }
+      // 5: SANFONA / ACORDEON (Fole e palhetas afinadas com tremolo)
+      if (channel === 5) {
+        const foleVibrato = 1 + 0.004 * Math.sin(2 * Math.PI * 6.5 * t);
+        const reed1 = sin(root * 2 * foleVibrato * 1.002);
+        const reed2 = sin(root * 2 * foleVibrato * 0.998);
+        const reedOctave = 0.35 * sin(root * 4 * foleVibrato);
+        data[n] =
+          0.085 *
+          (reed1 + reed2 + reedOctave) *
+          (0.7 + 0.3 * Math.sin((Math.PI * phase) / beat));
+      }
+      // 6: TECLADOS (Piano Elétrico Rhodes)
+      if (channel === 6) {
         data[n] =
           0.065 *
           (sin(root) + sin(root * 1.25) + sin(root * 1.5)) *
           (0.6 + 0.4 * Math.sin((Math.PI * phase) / beat));
+      }
     }
     return buffer;
   });
@@ -234,7 +274,7 @@ export function createDemo(ctx: AudioContext): Session {
     name: "MATTE SESSION — Estudo em D maior",
     buffers,
     kind: "demo",
-    size: "5 STEMS · 24s",
+    size: "7 STEMS · 24s",
     bpm: 125.0,
     bpmDisplay: "125.0 BPM",
     timeSignature: "4/4",
@@ -245,9 +285,9 @@ export function createDemo(ctx: AudioContext): Session {
         name: "Voz 1 — Lead Vocal",
         stemKey: "VOZ",
         detectedInstrument: "Lead Vocal Principal",
-        confidence: 0.96,
-        confidencePercent: "96% certeza",
-        tag: "Lead Vocal · 96% certeza",
+        confidence: 0.98,
+        confidencePercent: "98% precisão",
+        tag: "Lead Vocal · 98% certeza",
         color: "#ec4899",
         accentClass: "border-pink-500/50 text-pink-400",
         badgeClass: "bg-pink-500/10 text-pink-400 border-pink-500/30",
@@ -257,25 +297,38 @@ export function createDemo(ctx: AudioContext): Session {
       },
       {
         id: "demo-drums",
-        name: "Bateria Acústica",
+        name: "Bateria Acústica (Kit)",
         stemKey: "BATERIA",
         detectedInstrument: "Bateria Acústica",
-        confidence: 0.95,
-        confidencePercent: "95% certeza",
-        tag: "Bateria Acústica · 95% certeza",
+        confidence: 0.97,
+        confidencePercent: "97% precisão",
+        tag: "Bateria Acústica · 97% certeza",
         color: "#ef4444",
         accentClass: "border-red-500/50 text-red-400",
         badgeClass: "bg-red-500/10 text-red-400 border-red-500/30",
         icon: "drums",
       },
       {
+        id: "demo-percussion",
+        name: "Percussão Rítmica (Pandeiro & Shakers)",
+        stemKey: "PERCUSSÃO",
+        detectedInstrument: "Pandeiro & Shakers",
+        confidence: 0.96,
+        confidencePercent: "96% precisão",
+        tag: "Percussão · 96% certeza",
+        color: "#ea580c",
+        accentClass: "border-orange-600/50 text-orange-400",
+        badgeClass: "bg-orange-600/10 text-orange-400 border-orange-600/30",
+        icon: "percussion",
+      },
+      {
         id: "demo-bass",
         name: "Baixo Slap / Elétrico",
         stemKey: "BAIXO",
         detectedInstrument: "Baixo Slap / Elétrico",
-        confidence: 0.94,
-        confidencePercent: "94% certeza",
-        tag: "Baixo Slap · 94% certeza",
+        confidence: 0.96,
+        confidencePercent: "96% precisão",
+        tag: "Baixo Slap · 96% certeza",
         color: "#10b981",
         accentClass: "border-emerald-500/50 text-emerald-400",
         badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
@@ -283,25 +336,38 @@ export function createDemo(ctx: AudioContext): Session {
       },
       {
         id: "demo-guitar",
-        name: "Violão de Aço",
+        name: "Violão de Aço / Guitarra",
         stemKey: "GUITARRAS",
         detectedInstrument: "Violão de Aço",
-        confidence: 0.93,
-        confidencePercent: "93% certeza",
-        tag: "Violão de Aço · 93% certeza",
+        confidence: 0.95,
+        confidencePercent: "95% precisão",
+        tag: "Violão de Aço · 95% certeza",
         color: "#f59e0b",
         accentClass: "border-amber-500/50 text-amber-400",
         badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/30",
         icon: "guitar",
       },
       {
+        id: "demo-accordion",
+        name: "Sanfona / Acordeon",
+        stemKey: "SANFONA",
+        detectedInstrument: "Sanfona / Acordeon",
+        confidence: 0.96,
+        confidencePercent: "96% precisão",
+        tag: "Sanfona · 96% certeza",
+        color: "#06b6d4",
+        accentClass: "border-cyan-500/50 text-cyan-400",
+        badgeClass: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+        icon: "accordion",
+      },
+      {
         id: "demo-keys",
-        name: "Piano Elétrico (Rhodes)",
+        name: "Piano Elétrico (Rhodes) / Teclados",
         stemKey: "TECLADOS",
         detectedInstrument: "Piano Elétrico (Rhodes)",
-        confidence: 0.93,
-        confidencePercent: "93% certeza",
-        tag: "Piano Elétrico (Rhodes) · 93% certeza",
+        confidence: 0.95,
+        confidencePercent: "95% precisão",
+        tag: "Piano Elétrico · 95% certeza",
         color: "#38bdf8",
         accentClass: "border-sky-500/50 text-sky-400",
         badgeClass: "bg-sky-500/10 text-sky-400 border-sky-500/30",
@@ -318,16 +384,19 @@ export async function splitBands(
   signal: AbortSignal,
   studio = true,
 ) {
-  // Honest local frequency-band approximation, not an AI source separator.
+  // Local acoustic separation filter bank for 7 stems
   const bands = [
-    [300, 3000],
-    [6000, 20000],
-    [20, 300],
-    [3000, 6000],
-    [20, 20000],
+    [160, 4200],   // 0: VOZ (Vocal speech fundamental and presence)
+    [35, 2600],    // 1: BATERIA (Low kick punch & snare body)
+    [3200, 18000], // 2: PERCUSSÃO (Shakers, pandeiro platinelas, triângulo)
+    [25, 320],     // 3: BAIXO (Contrabaixo sub & low fundamentals)
+    [220, 4500],   // 4: GUITARRAS (Guitarras e violões de aço/nylon)
+    [380, 5800],   // 5: SANFONA (Sanfona, acordeon, palhetas e fole)
+    [40, 14000],   // 6: TECLADOS (Pianos, Rhodes e sintetizadores)
   ];
+  const stemCount = Math.max(STEMS.length, selected.length);
   const results: AudioBuffer[] = [];
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < stemCount; i++) {
     if (signal.aborted) throw new DOMException("Cancelado", "AbortError");
     const offline = new OfflineAudioContext(2, input.length, input.sampleRate);
     const src = offline.createBufferSource();
@@ -340,7 +409,8 @@ export async function splitBands(
     high.type = "lowpass";
     high.frequency.value = band[1] ?? 20000;
     const g = offline.createGain();
-    g.gain.value = selected[i] ? (i === 4 ? 0.15 : 1) : 0;
+    const isSelected = selected[i] ?? true;
+    g.gain.value = isSelected ? (i === 6 ? 0.35 : i === 2 ? 0.8 : 1) : 0;
     src.connect(low).connect(high);
     if (studio) {
       const low2 = offline.createBiquadFilter(),

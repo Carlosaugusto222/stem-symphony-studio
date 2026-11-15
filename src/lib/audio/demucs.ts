@@ -11,8 +11,8 @@ export interface DemucsProgress {
   stage: "queue" | "processing" | "downloading" | "ready";
   message: string;
   totalPercent: number;
-  stemPercents: [number, number, number, number, number];
-  stemMessages: [string, string, string, string, string];
+  stemPercents: number[];
+  stemMessages: string[];
   queuePosition?: number | null;
   queueEta?: number | null;
 }
@@ -207,7 +207,7 @@ function extractFileUrl(fileRef: unknown): string | null {
 export async function profileHarmonicStem(
   source: AudioBuffer,
   ctx: AudioContext,
-  target: "guitars" | "keyboards",
+  target: "guitars" | "keyboards" | "accordion" | "drums" | "percussion",
 ): Promise<AudioBuffer> {
   const offline = new OfflineAudioContext(
     source.numberOfChannels,
@@ -230,7 +230,7 @@ export async function profileHarmonicStem(
     mid.Q.value = 0.9;
 
     src.connect(hp).connect(mid).connect(offline.destination);
-  } else {
+  } else if (target === "keyboards") {
     // Focus keyboards/synths/pads: low body warmth and silky high air
     const lp = offline.createBiquadFilter();
     lp.type = "lowshelf";
@@ -243,6 +243,66 @@ export async function profileHarmonicStem(
     air.gain.value = 2.5;
 
     src.connect(lp).connect(air).connect(offline.destination);
+  } else if (target === "accordion") {
+    // Focus accordion/sanfona: cuts sub rumble, boosts chamber resonance and reed tremolo
+    const hp = offline.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 220;
+
+    const chamber = offline.createBiquadFilter();
+    chamber.type = "peaking";
+    chamber.frequency.value = 1250;
+    chamber.gain.value = 3.5;
+    chamber.Q.value = 1.1;
+
+    const reed = offline.createBiquadFilter();
+    reed.type = "peaking";
+    reed.frequency.value = 2850;
+    reed.gain.value = 4.0;
+    reed.Q.value = 1.5;
+
+    const lp = offline.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 8000;
+
+    src.connect(hp).connect(chamber).connect(reed).connect(lp).connect(offline.destination);
+  } else if (target === "drums") {
+    // Focus drum kit: low kick weight, snare body and impact, taming continuous high sizzle
+    const kick = offline.createBiquadFilter();
+    kick.type = "peaking";
+    kick.frequency.value = 65;
+    kick.gain.value = 3.0;
+    kick.Q.value = 1.0;
+
+    const snare = offline.createBiquadFilter();
+    snare.type = "peaking";
+    snare.frequency.value = 220;
+    snare.gain.value = 2.5;
+    snare.Q.value = 1.2;
+
+    const lp = offline.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 4500;
+
+    src.connect(kick).connect(snare).connect(lp).connect(offline.destination);
+  } else {
+    // Focus rhythm percussion: eliminates sub kick, isolates shakers, pandeiro, triângulo
+    const hp = offline.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 1400;
+
+    const platinelas = offline.createBiquadFilter();
+    platinelas.type = "peaking";
+    platinelas.frequency.value = 4800;
+    platinelas.gain.value = 4.0;
+    platinelas.Q.value = 1.2;
+
+    const air = offline.createBiquadFilter();
+    air.type = "highshelf";
+    air.frequency.value = 7500;
+    air.gain.value = 3.0;
+
+    src.connect(hp).connect(platinelas).connect(air).connect(offline.destination);
   }
 
   src.start(0);
@@ -484,51 +544,81 @@ export async function separateAudioDemucs(
           audioContext.sampleRate,
         );
 
-      // Map to 5 channels
+      // Map to 7 stems: VOZ, BATERIA, PERCUSSÃO, BAIXO, GUITARRAS, SANFONA, TECLADOS
       const resultBuffers: AudioBuffer[] = [];
 
       // CH 0: VOZ
-      resultBuffers[0] = selectedStems[0] ? vocalsBuf || emptyBuffer() : emptyBuffer();
+      resultBuffers[0] = (selectedStems[0] ?? true) ? vocalsBuf || emptyBuffer() : emptyBuffer();
 
-      // CH 1: BATERIA
-      resultBuffers[1] = selectedStems[1] ? drumsBuf || emptyBuffer() : emptyBuffer();
-
-      // CH 2: BAIXO
-      resultBuffers[2] = selectedStems[2] ? bassBuf || emptyBuffer() : emptyBuffer();
-
-      // CH 3: GUITARRAS
-      if (!selectedStems[3]) {
-        resultBuffers[3] = emptyBuffer();
-      } else if (guitarBuf) {
-        resultBuffers[3] = guitarBuf;
-      } else if (otherBuf) {
-        resultBuffers[3] = await profileHarmonicStem(otherBuf, audioContext, "guitars");
+      // CH 1: BATERIA (Kit acústico: bumbo, caixa, toms)
+      if (!(selectedStems[1] ?? true)) {
+        resultBuffers[1] = emptyBuffer();
+      } else if (drumsBuf) {
+        resultBuffers[1] = await profileHarmonicStem(drumsBuf, audioContext, "drums");
       } else {
-        resultBuffers[3] = emptyBuffer();
+        resultBuffers[1] = emptyBuffer();
       }
 
-      // CH 4: TECLADOS / OUTROS
-      if (!selectedStems[4]) {
-        resultBuffers[4] = emptyBuffer();
-      } else if (pianoBuf) {
-        resultBuffers[4] = pianoBuf;
+      // CH 2: PERCUSSÃO (Pandeiro, zabumba, shakers, congas)
+      if (!(selectedStems[2] ?? true)) {
+        resultBuffers[2] = emptyBuffer();
+      } else if (drumsBuf) {
+        resultBuffers[2] = await profileHarmonicStem(drumsBuf, audioContext, "percussion");
       } else if (otherBuf) {
-        resultBuffers[4] = await profileHarmonicStem(otherBuf, audioContext, "keyboards");
+        resultBuffers[2] = await profileHarmonicStem(otherBuf, audioContext, "percussion");
+      } else {
+        resultBuffers[2] = emptyBuffer();
+      }
+
+      // CH 3: BAIXO
+      resultBuffers[3] = (selectedStems[3] ?? true) ? bassBuf || emptyBuffer() : emptyBuffer();
+
+      // CH 4: GUITARRAS & VIOLÕES
+      if (!(selectedStems[4] ?? true)) {
+        resultBuffers[4] = emptyBuffer();
+      } else if (guitarBuf) {
+        resultBuffers[4] = guitarBuf;
+      } else if (otherBuf) {
+        resultBuffers[4] = await profileHarmonicStem(otherBuf, audioContext, "guitars");
       } else {
         resultBuffers[4] = emptyBuffer();
+      }
+
+      // CH 5: SANFONA / ACORDEON
+      if (!(selectedStems[5] ?? true)) {
+        resultBuffers[5] = emptyBuffer();
+      } else if (otherBuf) {
+        resultBuffers[5] = await profileHarmonicStem(otherBuf, audioContext, "accordion");
+      } else if (guitarBuf) {
+        resultBuffers[5] = await profileHarmonicStem(guitarBuf, audioContext, "accordion");
+      } else {
+        resultBuffers[5] = emptyBuffer();
+      }
+
+      // CH 6: TECLADOS & PIANOS
+      if (!(selectedStems[6] ?? true)) {
+        resultBuffers[6] = emptyBuffer();
+      } else if (pianoBuf) {
+        resultBuffers[6] = pianoBuf;
+      } else if (otherBuf) {
+        resultBuffers[6] = await profileHarmonicStem(otherBuf, audioContext, "keyboards");
+      } else {
+        resultBuffers[6] = emptyBuffer();
       }
 
       onProgress?.({
         stage: "ready",
-        message: "Demucs v4: 5 faixas isoladas prontas para ensaio!",
+        message: "Demucs v4: 7 faixas isoladas prontas para ensaio!",
         totalPercent: 100,
-        stemPercents: [100, 100, 100, 100, 100],
+        stemPercents: [100, 100, 100, 100, 100, 100, 100],
         stemMessages: [
           "Voz isolada em alta fidelidade",
-          "Bateria completa isolada",
+          "Bateria kit isolada",
+          "Percussão (pandeiro/shakers) isolada",
           "Baixo elétrico/acústico isolado",
           "Guitarras e violões isolados",
-          "Teclados, sintetizadores e pads isolados",
+          "Sanfona / acordeon isolado",
+          "Teclados e pianos isolados",
         ],
       });
 

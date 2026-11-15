@@ -214,6 +214,11 @@ describe("Intelligent Instrument & Timbre Recognizer", () => {
       expect(normalizeCategoryHint("Backing Vocals")).toBe("vocais");
       expect(normalizeCategoryHint("drums")).toBe("percussao");
       expect(normalizeCategoryHint("BATERIA")).toBe("percussao");
+      expect(normalizeCategoryHint("percussion")).toBe("percussao");
+      expect(normalizeCategoryHint("pandeiro")).toBe("percussao");
+      expect(normalizeCategoryHint("sanfona")).toBe("sanfona");
+      expect(normalizeCategoryHint("accordion")).toBe("sanfona");
+      expect(normalizeCategoryHint("gaita")).toBe("sanfona");
       expect(normalizeCategoryHint("bass")).toBe("baixo");
       expect(normalizeCategoryHint("BAIXO")).toBe("baixo");
       expect(normalizeCategoryHint("guitar")).toBe("cordas");
@@ -226,10 +231,32 @@ describe("Intelligent Instrument & Timbre Recognizer", () => {
       expect(normalizeCategoryHint(undefined)).toBeNull();
     });
 
+    it("classifies accordion and sanfona timbres", () => {
+      const ctx = new OfflineAudioContext(1, 44100, 44100);
+      const buffer = ctx.createBuffer(1, 44100, 44100);
+      const accordion = identifyInstrument(buffer, "sanfona");
+      expect(accordion.category).toBe("sanfona");
+      expect(accordion.icon).toBe("accordion");
+      expect(accordion.name).toMatch(/Sanfona|Acordeon/);
+    });
+
+    it("classifies separate percussion from acoustic drums", () => {
+      const ctx = new OfflineAudioContext(1, 44100, 44100);
+      const buffer = ctx.createBuffer(1, 44100, 44100);
+      const percussion = identifyInstrument(buffer, "percussion");
+      expect(percussion.category).toBe("percussao");
+      expect(percussion.icon).toBe("percussion");
+      expect(percussion.name).toMatch(/Pandeiro|Percussão|Shakers/);
+    });
+
     it("filters instruments by category", () => {
       const bassList = getInstrumentsByCategory("baixo");
       expect(bassList.length).toBeGreaterThanOrEqual(3);
       expect(bassList.every((b) => b.category === "baixo")).toBe(true);
+
+      const accordionList = getInstrumentsByCategory("sanfona");
+      expect(accordionList.length).toBeGreaterThanOrEqual(3);
+      expect(accordionList.every((a) => a.category === "sanfona")).toBe(true);
     });
   });
 });

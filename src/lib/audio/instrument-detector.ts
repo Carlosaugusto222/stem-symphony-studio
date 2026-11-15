@@ -14,6 +14,7 @@ export type InstrumentCategory =
   | "baixo"
   | "metais"
   | "percussao"
+  | "sanfona"
   | "vocais";
 
 export interface DetectedInstrument {
@@ -25,7 +26,7 @@ export interface DetectedInstrument {
   confidence: number;
   confidencePercent: string;
   tag: string;
-  icon: "guitar" | "piano" | "bass" | "drums" | "synth" | "mic" | "horn" | "percussion";
+  icon: "guitar" | "piano" | "bass" | "drums" | "synth" | "mic" | "horn" | "percussion" | "accordion";
   color: string;
   accentClass: string;
   badgeClass: string;
@@ -54,11 +55,12 @@ export interface TimbreFeatures {
 }
 
 export const CATEGORY_LABELS: Record<InstrumentCategory, string> = {
-  vocais: "Voz & Harmonias",
+  vocais: "Voz & Harmonias (Voz 1, 2, 3...)",
   percussao: "Bateria & Percussão",
+  sanfona: "Sanfona, Acordeon & Fole",
   baixo: "Contrabaixo",
-  cordas: "Guitarras & Violões",
-  teclas: "Teclas & Sintetizadores",
+  cordas: "Guitarras, Violões & Cavaco",
+  teclas: "Teclas, Pianos & Sintetizadores",
   metais: "Sopros & Metais",
 };
 
@@ -391,6 +393,18 @@ export function normalizeCategoryHint(hint?: string | null): InstrumentCategory 
   if (!hint) return null;
   const h = hint.toLowerCase().trim();
 
+  // Accordion & Sanfona
+  if (
+    h.includes("accordion") ||
+    h.includes("sanfona") ||
+    h.includes("acordeon") ||
+    h.includes("acordeão") ||
+    h.includes("gaita") ||
+    h.includes("fole")
+  ) {
+    return "sanfona";
+  }
+
   // Vocals
   if (
     h.includes("vocal") ||
@@ -549,6 +563,23 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     frequencyRange: "250 Hz - 10 kHz",
   },
   {
+    id: "vocal-harmony",
+    name: "Voz 2 — Harmonia (Terças e Quintas)",
+    shortName: "Voz 2 Harmonia",
+    category: "vocais",
+    categoryLabel: CATEGORY_LABELS.vocais,
+    confidence: 0.95,
+    confidencePercent: "95% precisão",
+    tag: "Voz 2 Harmonia · 95% certeza",
+    icon: "mic",
+    color: "#a855f7",
+    accentClass: "border-purple-500/50 text-purple-400",
+    badgeClass: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+    description: "Segunda voz com linhas melódicas em terças, quintas e contrapontos harmônicos",
+    timbreCharacteristics: "Formantes focados em 450Hz - 4.5kHz com clareza melódica de apoio",
+    frequencyRange: "200 Hz - 9 kHz",
+  },
+  {
     id: "vocal-choir",
     name: "Dobras Vocais & Coro",
     shortName: "Dobras / Coro",
@@ -565,8 +596,25 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     timbreCharacteristics: "Ampla imagem estéreo, sedosidade acima de 4 kHz e reflexões suaves",
     frequencyRange: "200 Hz - 14 kHz",
   },
+  {
+    id: "vocal-voice3",
+    name: "Voz 3 — Terceira Voz (Ambiência & Agudos)",
+    shortName: "Voz 3 Aguda",
+    category: "vocais",
+    categoryLabel: CATEGORY_LABELS.vocais,
+    confidence: 0.93,
+    confidencePercent: "93% precisão",
+    tag: "Voz 3 · 93% certeza",
+    icon: "mic",
+    color: "#6366f1",
+    accentClass: "border-indigo-500/50 text-indigo-400",
+    badgeClass: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+    description: "Terceira voz com camadas agudas, falsetes, contracantos e ambiência aberta",
+    timbreCharacteristics: "Brilho aéreo, formantes superiores (> 2.5 kHz) e espacialidade estereofônica",
+    frequencyRange: "300 Hz - 14 kHz",
+  },
 
-  // 2. BATERIA & PERCUSSÃO
+  // 2. BATERIA (Kits & Peças)
   {
     id: "drums-acoustic",
     name: "Bateria Acústica (Kit Completo)",
@@ -586,7 +634,7 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
   },
   {
     id: "drums-electronic",
-    name: "Bateria Eletrônica (Trap / 808)",
+    name: "Bateria Eletrônica (Trap / 808 / V-Drums)",
     shortName: "Bateria Eletrônica",
     category: "percussao",
     categoryLabel: CATEGORY_LABELS.percussao,
@@ -600,40 +648,6 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     description: "Subgrave sintético 808 focado, transientes digitais rápidos e caixas pontuais",
     timbreCharacteristics: "Pico ultra-grave sintetizado (40 Hz - 70 Hz), hi-hats rápidos e secos",
     frequencyRange: "30 Hz - 16 kHz",
-  },
-  {
-    id: "percussion-shakers",
-    name: "Percussão Rítmica (Shakers & Pandeiro)",
-    shortName: "Shakers & Pandeiro",
-    category: "percussao",
-    categoryLabel: CATEGORY_LABELS.percussao,
-    confidence: 0.94,
-    confidencePercent: "94% precisão",
-    tag: "Shakers / Pandeiro · 94% certeza",
-    icon: "percussion",
-    color: "#fb923c",
-    accentClass: "border-orange-500/50 text-orange-400",
-    badgeClass: "bg-orange-500/10 text-orange-400 border-orange-500/30",
-    description: "Texturas rítmicas de alta frequência, ganzá, chocalho e platinelas de pandeiro",
-    timbreCharacteristics: "Energia predominante acima de 4 kHz, envelope rítmico percussivo veloz",
-    frequencyRange: "1 kHz - 18 kHz",
-  },
-  {
-    id: "percussion-latin",
-    name: "Percussão Latina (Bongôs & Congas)",
-    shortName: "Congas & Bongôs",
-    category: "percussao",
-    categoryLabel: CATEGORY_LABELS.percussao,
-    confidence: 0.93,
-    confidencePercent: "93% precisão",
-    tag: "Congas / Bongôs · 93% certeza",
-    icon: "percussion",
-    color: "#ea580c",
-    accentClass: "border-orange-600/50 text-orange-300",
-    badgeClass: "bg-orange-600/10 text-orange-300 border-orange-600/30",
-    description: "Ressonância acústica de peles, slaps secos e corpo tonal em médios-graves",
-    timbreCharacteristics: "Pico de ressonância de pele em 250 Hz - 600 Hz, ataque de palma incisivo",
-    frequencyRange: "150 Hz - 9 kHz",
   },
   {
     id: "drums-kick",
@@ -668,6 +682,178 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     description: "Corpo tonal em 200 Hz e esteira metálica brilhante de alta definição acústica",
     timbreCharacteristics: "Ataque percussivo seco com ruído de esteira em 3 kHz - 8 kHz",
     frequencyRange: "160 Hz - 14 kHz",
+  },
+  {
+    id: "drums-cymbals",
+    name: "Pratos & Chimbau (Hi-Hats / Cymbals)",
+    shortName: "Pratos / Chimbau",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Pratos / Hi-Hats · 94% certeza",
+    icon: "drums",
+    color: "#f87171",
+    accentClass: "border-red-400/50 text-red-300",
+    badgeClass: "bg-red-400/10 text-red-300 border-red-400/30",
+    description: "Condução de chimbau (aberto/fechado), pratos de ataque (crash) e condução (ride)",
+    timbreCharacteristics: "Frequências ultra-altas (> 5 kHz), sustentação metálica brilhante",
+    frequencyRange: "2.5 kHz - 20 kHz",
+  },
+  {
+    id: "drums-toms",
+    name: "Tons & Surdo (Tom-Toms & Floor Tom)",
+    shortName: "Tons & Surdo",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.93,
+    confidencePercent: "93% precisão",
+    tag: "Tons / Surdo · 93% certeza",
+    icon: "drums",
+    color: "#991b1b",
+    accentClass: "border-red-800/50 text-red-300",
+    badgeClass: "bg-red-800/10 text-red-300 border-red-800/30",
+    description: "Tambores de afinação média-grave, ressonância profunda de peles e viradas",
+    timbreCharacteristics: "Decaimento tonal afunilado (90 Hz - 300 Hz) e ataque de baqueta",
+    frequencyRange: "70 Hz - 6 kHz",
+  },
+
+  // 3. PERCUSSÃO (Instrumentos Rítmicos Separados da Bateria)
+  {
+    id: "percussion-general",
+    name: "Percussão Geral / Set Percussivo",
+    shortName: "Set Percussivo",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.95,
+    confidencePercent: "95% precisão",
+    tag: "Percussão Geral · 95% certeza",
+    icon: "percussion",
+    color: "#ea580c",
+    accentClass: "border-orange-600/50 text-orange-400",
+    badgeClass: "bg-orange-600/10 text-orange-400 border-orange-600/30",
+    description: "Mix completo de percussão acústica com acentos sincopados e condução rítmica",
+    timbreCharacteristics: "Amplo espectro percussivo orgânico, dinâmica ágil e transientes nítidos",
+    frequencyRange: "100 Hz - 18 kHz",
+  },
+  {
+    id: "percussion-pandeiro",
+    name: "Pandeiro Brasileiro (Samba / Choro / Forró)",
+    shortName: "Pandeiro",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.96,
+    confidencePercent: "96% precisão",
+    tag: "Pandeiro · 96% certeza",
+    icon: "percussion",
+    color: "#f97316",
+    accentClass: "border-orange-500/50 text-orange-300",
+    badgeClass: "bg-orange-500/10 text-orange-300 border-orange-500/30",
+    description: "Grave de polegar na pele somado ao tilintar metálico brilhante das platinelas",
+    timbreCharacteristics: "Baque grave afinado (120 Hz) combinado com platinelas brilhantes em 6 kHz - 14 kHz",
+    frequencyRange: "100 Hz - 18 kHz",
+  },
+  {
+    id: "percussion-zabumba-triangulo",
+    name: "Zabumba & Triângulo (Forró / Baião / Xote)",
+    shortName: "Zabumba & Triângulo",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.95,
+    confidencePercent: "95% precisão",
+    tag: "Zabumba & Triângulo · 95% certeza",
+    icon: "percussion",
+    color: "#fb923c",
+    accentClass: "border-orange-400/50 text-orange-300",
+    badgeClass: "bg-orange-400/10 text-orange-300 border-orange-400/30",
+    description: "Batida pesada de zabumba (grave e bacalhau) com a condução metálica rápida do triângulo",
+    timbreCharacteristics: "Grave encorpado de fita/maceta em 70 Hz - 150 Hz e brilho ressonante do triângulo em 8 kHz",
+    frequencyRange: "50 Hz - 16 kHz",
+  },
+  {
+    id: "percussion-shakers",
+    name: "Percussão Rítmica (Shakers, Ganzá & Chocalho)",
+    shortName: "Shakers & Ganzá",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Shakers / Ganzá · 94% certeza",
+    icon: "percussion",
+    color: "#fdba74",
+    accentClass: "border-orange-300/50 text-orange-200",
+    badgeClass: "bg-orange-300/10 text-orange-200 border-orange-300/30",
+    description: "Texturas rítmicas contínuas de alta frequência, ganzá, sementes e chocalho de esteira",
+    timbreCharacteristics: "Energia predominante acima de 4.5 kHz, envelope veloz e contínuo sem subgraves",
+    frequencyRange: "1.5 kHz - 18 kHz",
+  },
+  {
+    id: "percussion-latin",
+    name: "Percussão Latina (Congas, Tumbadoras & Bongôs)",
+    shortName: "Congas & Bongôs",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Congas / Bongôs · 94% certeza",
+    icon: "percussion",
+    color: "#c2410c",
+    accentClass: "border-orange-700/50 text-orange-300",
+    badgeClass: "bg-orange-700/10 text-orange-300 border-orange-700/30",
+    description: "Ressonância acústica de peles animais, slaps incisivos e tons abertos de congas",
+    timbreCharacteristics: "Pico ressonante de tambor em 200 Hz - 500 Hz, estalo dinâmico de tapa na pele",
+    frequencyRange: "120 Hz - 9 kHz",
+  },
+  {
+    id: "percussion-tamborim",
+    name: "Tamborim & Repique (Samba / Batucada)",
+    shortName: "Tamborim & Repique",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Tamborim · 94% certeza",
+    icon: "percussion",
+    color: "#ea580c",
+    accentClass: "border-orange-600/50 text-orange-400",
+    badgeClass: "bg-orange-600/10 text-orange-400 border-orange-600/30",
+    description: "Batida estalada aguda de baqueta de nylon no tamborim e repique de mão/baqueta",
+    timbreCharacteristics: "Ataque seco de alta amplitude em 1.8 kHz - 5 kHz com decaimento instantâneo",
+    frequencyRange: "400 Hz - 14 kHz",
+  },
+  {
+    id: "percussion-cajon",
+    name: "Cajón Acústico (Flamenco / Pop)",
+    shortName: "Cajón",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.93,
+    confidencePercent: "93% precisão",
+    tag: "Cajón · 93% certeza",
+    icon: "percussion",
+    color: "#d97706",
+    accentClass: "border-amber-600/50 text-amber-300",
+    badgeClass: "bg-amber-600/10 text-amber-300 border-amber-600/30",
+    description: "Caixa de madeira percussiva com grave ressonante no centro e estalo de esteira na borda",
+    timbreCharacteristics: "Bumbo amadeirado em 80 Hz e esteira de violão/corda na borda superior",
+    frequencyRange: "60 Hz - 12 kHz",
+  },
+  {
+    id: "percussion-agogo-berimbau",
+    name: "Agogô, Berimbau & Blocos Sonoros",
+    shortName: "Agogô & Berimbau",
+    category: "percussao",
+    categoryLabel: CATEGORY_LABELS.percussao,
+    confidence: 0.93,
+    confidencePercent: "93% precisão",
+    tag: "Agogô / Berimbau · 93% certeza",
+    icon: "percussion",
+    color: "#b45309",
+    accentClass: "border-amber-700/50 text-amber-300",
+    badgeClass: "bg-amber-700/10 text-amber-300 border-amber-700/30",
+    description: "Campânulas metálicas afinadas em duas notas e zumbido tradicional de berimbau de arame",
+    timbreCharacteristics: "Harmônicos metálicos pontuais e ressonância de cabaça",
+    frequencyRange: "300 Hz - 10 kHz",
   },
 
   // 3. CONTRABAIXO
@@ -739,8 +925,95 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     timbreCharacteristics: "Ataque acústico aveludado, harmônicos amadeirados e decay longo",
     frequencyRange: "40 Hz - 3.5 kHz",
   },
+  {
+    id: "bass-7string",
+    name: "Baixaria de Violão / 7 Cordas (Choro / Samba)",
+    shortName: "Violão 7 Cordas",
+    category: "baixo",
+    categoryLabel: CATEGORY_LABELS.baixo,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Violão 7C (Baixo) · 94% certeza",
+    icon: "bass",
+    color: "#059669",
+    accentClass: "border-emerald-600/50 text-emerald-300",
+    badgeClass: "bg-emerald-600/10 text-emerald-300 border-emerald-600/30",
+    description: "Frases graves de contraponto características do violão de sete cordas brasileiro",
+    timbreCharacteristics: "Ressonância grave de corda de nylon (C2/B1) com condução melódica de polegar",
+    frequencyRange: "55 Hz - 4 kHz",
+  },
 
-  // 4. GUITARRAS & VIOLÕES
+  // 5. SANFONA & ACORDEON (Fole e Palhetas)
+  {
+    id: "accordion-solo",
+    name: "Sanfona / Acordeon (Solo / Forró / Sertanejo)",
+    shortName: "Sanfona Solo",
+    category: "sanfona",
+    categoryLabel: CATEGORY_LABELS.sanfona,
+    confidence: 0.96,
+    confidencePercent: "96% precisão",
+    tag: "Sanfona · 96% certeza",
+    icon: "accordion",
+    color: "#06b6d4",
+    accentClass: "border-cyan-500/50 text-cyan-400",
+    badgeClass: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+    description: "Sanfona / acordeon tradicional com registros de fole abertos, palhetas afinadas e tremolo musette",
+    timbreCharacteristics: "Batimento harmônico de palhetas duplas em 1.2 kHz - 3.5 kHz com vibrato de fole",
+    frequencyRange: "120 Hz - 10 kHz",
+  },
+  {
+    id: "accordion-bass",
+    name: "Baixos da Sanfona (Marcação Rítmica de Fole)",
+    shortName: "Baixos de Sanfona",
+    category: "sanfona",
+    categoryLabel: CATEGORY_LABELS.sanfona,
+    confidence: 0.95,
+    confidencePercent: "95% precisão",
+    tag: "Baixos Sanfona · 95% certeza",
+    icon: "accordion",
+    color: "#0891b2",
+    accentClass: "border-cyan-600/50 text-cyan-300",
+    badgeClass: "bg-cyan-600/10 text-cyan-300 border-cyan-600/30",
+    description: "Marcação rítmica de botões graves da mão esquerda (baixo e acordes de fole)",
+    timbreCharacteristics: "Subgrave acústico de palheta em 60 Hz - 180 Hz com acentuação rápida de fole",
+    frequencyRange: "50 Hz - 4 kHz",
+  },
+  {
+    id: "accordion-gaita",
+    name: "Gaita Ponto / Acordeon 8 Baixos (Vanera / Regional)",
+    shortName: "Gaita Ponto",
+    category: "sanfona",
+    categoryLabel: CATEGORY_LABELS.sanfona,
+    confidence: 0.95,
+    confidencePercent: "95% precisão",
+    tag: "Gaita Ponto · 95% certeza",
+    icon: "accordion",
+    color: "#22d3ee",
+    accentClass: "border-cyan-400/50 text-cyan-300",
+    badgeClass: "bg-cyan-400/10 text-cyan-300 border-cyan-400/30",
+    description: "Acordeon diatônico de palhetas brilhantes com estalo seco e sotaque gaúcho/regional",
+    timbreCharacteristics: "Palhetas mais incisivas e brilhantes com transientes de botão bem definidos",
+    frequencyRange: "130 Hz - 12 kHz",
+  },
+  {
+    id: "accordion-bandoneon",
+    name: "Bandoneón / Concertina (Tango / Valsa)",
+    shortName: "Bandoneón",
+    category: "sanfona",
+    categoryLabel: CATEGORY_LABELS.sanfona,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Bandoneón · 94% certeza",
+    icon: "accordion",
+    color: "#0e7490",
+    accentClass: "border-cyan-700/50 text-cyan-300",
+    badgeClass: "bg-cyan-700/10 text-cyan-300 border-cyan-700/30",
+    description: "Timbre melancólico e cortante de palhetas de zinco/aço com articulação profunda de fole",
+    timbreCharacteristics: "Médios dramáticos e ataque de palheta característico do bandoneón",
+    frequencyRange: "100 Hz - 9 kHz",
+  },
+
+  // 6. GUITARRAS, VIOLÕES & CORDAS
   {
     id: "guitar-electric-distortion",
     name: "Guitarra Distorcida (Overdrive / Hi-Gain)",
@@ -776,6 +1049,23 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     frequencyRange: "80 Hz - 8 kHz",
   },
   {
+    id: "guitar-semiacoustic",
+    name: "Guitarra Semi-Acústica (Jazz / Blues / Bossa)",
+    shortName: "Guitarra Jazz",
+    category: "cordas",
+    categoryLabel: CATEGORY_LABELS.cordas,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Guitarra Semi-Acústica · 94% certeza",
+    icon: "guitar",
+    color: "#d97706",
+    accentClass: "border-amber-600/50 text-amber-300",
+    badgeClass: "bg-amber-600/10 text-amber-300 border-amber-600/30",
+    description: "Corpo hollow-body quente com captador humbucker no braço e resposta aveludada",
+    timbreCharacteristics: "Ressonância amadeirada sutil, médios quentes e agudos macios",
+    frequencyRange: "80 Hz - 7.5 kHz",
+  },
+  {
     id: "guitar-acoustic-steel",
     name: "Violão de Aço (Folk Acoustic)",
     shortName: "Violão de Aço",
@@ -794,13 +1084,13 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
   },
   {
     id: "guitar-acoustic-nylon",
-    name: "Violão de Nylon (Clássico / MPB)",
+    name: "Violão de Nylon (Clássico / MPB / Bossa)",
     shortName: "Violão Nylon",
     category: "cordas",
     categoryLabel: CATEGORY_LABELS.cordas,
-    confidence: 0.94,
-    confidencePercent: "94% precisão",
-    tag: "Violão Nylon · 94% certeza",
+    confidence: 0.95,
+    confidencePercent: "95% precisão",
+    tag: "Violão Nylon · 95% certeza",
     icon: "guitar",
     color: "#f97316",
     accentClass: "border-orange-500/50 text-orange-400",
@@ -808,6 +1098,57 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     description: "Timbre aveludado com ataque macio nas pontas dos dedos e graves ressonantes",
     timbreCharacteristics: "Graves macios e redondos, médios líricos e ausência de atrito metálico",
     frequencyRange: "82 Hz - 7 kHz",
+  },
+  {
+    id: "guitar-cavaquinho",
+    name: "Cavaquinho / Cavaco (Samba / Pagode / Choro)",
+    shortName: "Cavaquinho",
+    category: "cordas",
+    categoryLabel: CATEGORY_LABELS.cordas,
+    confidence: 0.95,
+    confidencePercent: "95% precisão",
+    tag: "Cavaquinho · 95% certeza",
+    icon: "guitar",
+    color: "#ea580c",
+    accentClass: "border-orange-600/50 text-orange-400",
+    badgeClass: "bg-orange-600/10 text-orange-400 border-orange-600/30",
+    description: "Palhetada percussiva rápida e brilhante de 4 cordas de aço em afinação D-G-B-D",
+    timbreCharacteristics: "Faixa de frequência média-aguda (280 Hz - 6 kHz) com ataque percussivo incisivo",
+    frequencyRange: "280 Hz - 9 kHz",
+  },
+  {
+    id: "guitar-viola",
+    name: "Viola Caipira / 10 Cordas (Sertanejo Raiz)",
+    shortName: "Viola Caipira",
+    category: "cordas",
+    categoryLabel: CATEGORY_LABELS.cordas,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Viola Caipira · 94% certeza",
+    icon: "guitar",
+    color: "#b45309",
+    accentClass: "border-amber-700/50 text-amber-300",
+    badgeClass: "bg-amber-700/10 text-amber-300 border-amber-700/30",
+    description: "Pares de cordas duplicadas com oitavas que produzem um coro natural cintilante",
+    timbreCharacteristics: "Brilho metálico ressonante em pares e ponteios agudos com sustentação única",
+    frequencyRange: "120 Hz - 12 kHz",
+  },
+  {
+    id: "guitar-bandolim",
+    name: "Bandolim Brasileiro (Choro / Seresta)",
+    shortName: "Bandolim",
+    category: "cordas",
+    categoryLabel: CATEGORY_LABELS.cordas,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Bandolim · 94% certeza",
+    icon: "guitar",
+    color: "#c2410c",
+    accentClass: "border-orange-700/50 text-orange-300",
+    badgeClass: "bg-orange-700/10 text-orange-300 border-orange-700/30",
+    description: "Pares de cordas afinadas em quintas com palhetada tremolo rápida e som cristalino",
+    timbreCharacteristics: "Ataque rápido de palheta de madrepérola e sustentação cristalina superior",
+    frequencyRange: "196 Hz - 10 kHz",
   },
   {
     id: "strings-ensemble",
@@ -827,11 +1168,11 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     frequencyRange: "65 Hz - 12 kHz",
   },
 
-  // 5. TECLAS & SINTETIZADORES
+  // 7. TECLAS & SINTETIZADORES
   {
     id: "keys-piano-acoustic",
     name: "Piano Acústico de Cauda (Grand Piano)",
-    shortName: "Piano Acústico",
+    shortName: "Piano de Cauda",
     category: "teclas",
     categoryLabel: CATEGORY_LABELS.teclas,
     confidence: 0.96,
@@ -844,6 +1185,23 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     description: "Ataque percussivo de martelos mecânicos e ressonância harmônica natural de cordas",
     timbreCharacteristics: "Faixa dinâmica ampla, percussão de feltro no ataque e harmônicos ricos",
     frequencyRange: "27 Hz - 14 kHz",
+  },
+  {
+    id: "keys-piano-upright",
+    name: "Piano Vertical Acústico (Upright Piano)",
+    shortName: "Piano Vertical",
+    category: "teclas",
+    categoryLabel: CATEGORY_LABELS.teclas,
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Piano Vertical · 94% certeza",
+    icon: "piano",
+    color: "#0369a1",
+    accentClass: "border-sky-700/50 text-sky-300",
+    badgeClass: "bg-sky-700/10 text-sky-300 border-sky-700/30",
+    description: "Sonoridade intimista e encorpada típica de pianos verticais de estudo e estúdio",
+    timbreCharacteristics: "Graves focados, ataque acolchoado e ressonância contida",
+    frequencyRange: "30 Hz - 12 kHz",
   },
   {
     id: "keys-rhodes",
@@ -864,7 +1222,7 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
   },
   {
     id: "keys-organ",
-    name: "Órgão Eletromecânico (Hammond B3)",
+    name: "Órgão Eletromecânico (Hammond B3 / Rotary)",
     shortName: "Órgão Hammond",
     category: "teclas",
     categoryLabel: CATEGORY_LABELS.teclas,
@@ -878,6 +1236,23 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     description: "Síntese aditiva contínua com barras harmônicas e modulação de caixa giratória Leslie",
     timbreCharacteristics: "Sem decaimento dinâmico, saturação harmônica suave e modulação Doppler rotativa",
     frequencyRange: "40 Hz - 8 kHz",
+  },
+  {
+    id: "keys-arranger",
+    name: "Teclado Arranjador / Bras & Strings Sintetizados",
+    shortName: "Teclado Arranjador",
+    category: "teclas",
+    categoryLabel: CATEGORY_LABELS.teclas,
+    confidence: 0.93,
+    confidencePercent: "93% precisão",
+    tag: "Teclado Arranjador · 93% certeza",
+    icon: "synth",
+    color: "#7c3aed",
+    accentClass: "border-violet-600/50 text-violet-300",
+    badgeClass: "bg-violet-600/10 text-violet-300 border-violet-600/30",
+    description: "Timbres sampleados de teclado de baile, metais de teclado e cordas sintetizadas",
+    timbreCharacteristics: "Sons multitimbrais em camadas, ataque rápido e equalização pronta para show",
+    frequencyRange: "60 Hz - 14 kHz",
   },
   {
     id: "keys-synth-pad",
@@ -931,7 +1306,7 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     frequencyRange: "80 Hz - 10 kHz",
   },
 
-  // 6. SOPROS & METAIS
+  // 8. SOPROS & METAIS
   {
     id: "brass-section",
     name: "Metais / Brass Section",
@@ -951,13 +1326,13 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
   },
   {
     id: "woodwinds-sax",
-    name: "Saxofone / Palhetas",
+    name: "Saxofone (Alto / Tenor / Soprano)",
     shortName: "Saxofone",
     category: "metais",
     categoryLabel: CATEGORY_LABELS.metais,
-    confidence: 0.93,
-    confidencePercent: "93% precisão",
-    tag: "Saxofone · 93% certeza",
+    confidence: 0.94,
+    confidencePercent: "94% precisão",
+    tag: "Saxofone · 94% certeza",
     icon: "horn",
     color: "#d97706",
     accentClass: "border-amber-600/50 text-amber-300",
@@ -965,6 +1340,40 @@ export const INSTRUMENT_TAXONOMY: DetectedInstrument[] = [
     description: "Timbre expressivo com vibrato acústico e ataque aveludado de palheta",
     timbreCharacteristics: "Harmônicos quentes de palheta, respiração audível e expressividade lírica",
     frequencyRange: "120 Hz - 9 kHz",
+  },
+  {
+    id: "brass-trumpet",
+    name: "Trompete Solo",
+    shortName: "Trompete",
+    category: "metais",
+    categoryLabel: CATEGORY_LABELS.metais,
+    confidence: 0.93,
+    confidencePercent: "93% precisão",
+    tag: "Trompete · 93% certeza",
+    icon: "horn",
+    color: "#fbbf24",
+    accentClass: "border-amber-400/50 text-amber-300",
+    badgeClass: "bg-amber-400/10 text-amber-300 border-amber-400/30",
+    description: "Brilho metálico penetrante, articulação de bocal ágil e solos agudos",
+    timbreCharacteristics: "Pico de ataque brilhante em 2 kHz - 6 kHz e projeção direta",
+    frequencyRange: "160 Hz - 12 kHz",
+  },
+  {
+    id: "woodwinds-flute",
+    name: "Flauta Transversal / Pífano",
+    shortName: "Flauta / Pífano",
+    category: "metais",
+    categoryLabel: CATEGORY_LABELS.metais,
+    confidence: 0.93,
+    confidencePercent: "93% precisão",
+    tag: "Flauta · 93% certeza",
+    icon: "horn",
+    color: "#34d399",
+    accentClass: "border-emerald-400/50 text-emerald-300",
+    badgeClass: "bg-emerald-400/10 text-emerald-300 border-emerald-400/30",
+    description: "Som puro e aveludado de sopro, harmônicos suaves e melodias líricas",
+    timbreCharacteristics: "Onda senoidal com ruído sutil de ar de embocadura (250 Hz - 8 kHz)",
+    frequencyRange: "250 Hz - 10 kHz",
   },
 ];
 
@@ -1041,6 +1450,26 @@ export function identifyInstrument(
     }
 
     case "percussao": {
+      if (
+        hint &&
+        (hint.toLowerCase().includes("perc") ||
+          hint.toLowerCase().includes("shaker") ||
+          hint.toLowerCase().includes("pandeiro") ||
+          hint.toLowerCase().includes("zabumba") ||
+          hint.toLowerCase().includes("conga"))
+      ) {
+        if (f.airRatio > 0.28) {
+          return getInstrumentById("percussion-shakers")!;
+        }
+        if (f.lowMidRatio > 0.26) {
+          return getInstrumentById("percussion-zabumba-triangulo")!;
+        }
+        if (f.midRatio > 0.3) {
+          return getInstrumentById("percussion-tamborim")!;
+        }
+        return getInstrumentById("percussion-pandeiro")!;
+      }
+
       if (f.subBassRatio > 0.35 && f.crestFactor > 5.5) {
         return getInstrumentById("drums-electronic")!;
       }
@@ -1057,6 +1486,16 @@ export function identifyInstrument(
         return getInstrumentById("drums-snare")!;
       }
       return getInstrumentById("drums-acoustic")!;
+    }
+
+    case "sanfona": {
+      if (f.subBassRatio > 0.25 || f.fundamentalHz < 160) {
+        return getInstrumentById("accordion-bass")!;
+      }
+      if (f.highMidRatio > 0.25) {
+        return getInstrumentById("accordion-gaita")!;
+      }
+      return getInstrumentById("accordion-solo")!;
     }
 
     case "baixo": {
