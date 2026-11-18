@@ -1,6 +1,6 @@
 # Stem Symphony Studio
 
-Quero fazer um app que separa os áudios de uma música por cada instrumento musical e que eu possa mutar ou ajustar o volume de cada instrumento para criar um play-along/backing track para músicos praticando, com paridade total entre instrumentos e voz, começando pela implementação do fluxo de upload e separação de faixas no visual Matte Studio.
+App que separa os áudios de uma música por cada instrumento musical e que eu possa mutar ou ajustar o volume de cada instrumento para criar um play-along/backing track para músicos praticando, com paridade total entre instrumentos e voz, começando pela implementação do fluxo de upload e separação de faixas no visual Matte Studio.
 
 Locked:
 - Visual Direction: Matte Studio (adotado pelo usuário).
